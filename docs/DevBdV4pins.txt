@@ -1,0 +1,55 @@
+T:\T_Drive\tCode\T4\PinListLuni\PinListLuni.ino Dec 23 2023 19:13:26
+PIN   GPIOn-BITm  |  GPIOn-BITm    PIN
+------------------|-------------------
+_L___ 00  -> GPIO6-03   |   GPIO6-02  ->  01
+_L___ 01  -> GPIO6-02   |   GPIO6-03  ->  00
+____x 02  -> GPIO9-04   |   GPIO6-12  ->  24
+____x 03  -> GPIO9-05   |   GPIO6-13  ->  25
+____x 04  -> GPIO9-06   |   GPIO6-16  ->  19
+____x 05  -> GPIO9-08   |   GPIO6-17  ->  18
+___R_ 06  -> GPIO7-10   |   GPIO6-18  ->  14
+___R_ 07  -> GPIO7-17   |   GPIO6-19  ->  15
+___R_ 08  -> GPIO7-16   |   GPIO6-22  ->  17
+___R_ 09  -> GPIO7-11   |   GPIO6-23  ->  16
+___R_ 10  -> GPIO7-00   |   GPIO6-24  ->  22
+___R_ 11  -> GPIO7-02   |   GPIO6-25  ->  23
+___R_ 12  -> GPIO7-01   |   GPIO6-26  ->  20
+___R_ 13  -> GPIO7-03   |   GPIO6-27  ->  21
+_L___ 14  -> GPIO6-18   |   GPIO6-30  ->  26
+____X 15  -> GPIO6-19   |   GPIO6-31  ->  27
+_L___ 16  -> GPIO6-23   |   GPIO7-00  ->  10
+_L___ 17  -> GPIO6-22   |   GPIO7-01  ->  12
+_L___ 18  -> GPIO6-17   |   GPIO7-02  ->  11
+_L___ 19  -> GPIO6-16   |   GPIO7-03  ->  13
+_L___ 20  -> GPIO6-26   |   GPIO7-04  ->  40
+_L___ 21  -> GPIO6-27   |   GPIO7-05  ->  41
+_L___ 22  -> GPIO6-24   |   GPIO7-06  ->  42
+_L___ 23  -> GPIO6-25   |   GPIO7-07  ->  43
+_L___ 24  -> GPIO6-12   |   GPIO7-08  ->  44
+_L___ 25  -> GPIO6-13   |   GPIO7-09  ->  45
+____x 26  -> GPIO6-30   |   GPIO7-10  ->  06
+_L___ 27  -> GPIO6-31   |   GPIO7-11  ->  09
+____x 28  -> GPIO8-18   |   GPIO7-12  ->  32
+____x 29  -> GPIO9-31   |   GPIO7-16  ->  08
+____x 30  -> GPIO8-23   |   GPIO7-17  ->  07
+____x 31  -> GPIO8-22   |   GPIO8-12  ->  37
+___R_ 32  -> GPIO7-12   |   GPIO8-13  ->  36
+____x 33  -> GPIO9-07   |   GPIO8-14  ->  35
+____x 34  -> GPIO8-15   |   GPIO8-15  ->  34
+____x 35  -> GPIO8-14   |   GPIO8-16  ->  38
+____x 36  -> GPIO8-13   |   GPIO8-17  ->  39
+____x 37  -> GPIO8-12   |   GPIO8-18  ->  28
+____x 38  -> GPIO8-16   |   GPIO8-22  ->  31
+____x 39  -> GPIO8-17   |   GPIO8-23  ->  30
+___R_ 40  -> GPIO7-04   |   GPIO9-04  ->  02
+___R_ 41  -> GPIO7-05   |   GPIO9-05  ->  03
+___R_ 42  -> GPIO7-06   |   GPIO9-06  ->  04
+___R_ 43  -> GPIO7-07   |   GPIO9-07  ->  33
+___R_ 44  -> GPIO7-08   |   GPIO9-08  ->  05
+___R_ 45  -> GPIO7-09   |   GPIO9-31  ->  29
+
+T_MM has 46 digital I/O : 29 are on the DevBd v4
+14 above on DevBd v4 left (usb top)
+15 above on DevBd v4 right (usb top)
+17 on right from port groups not connected as T_MM
+16 expected T_MM missing, presumed moved to SDRAM
