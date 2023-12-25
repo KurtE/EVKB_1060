@@ -1,0 +1,176 @@
+
+
+Searching 11446 files for "ARDUINO_TEENSY_MICROMOD"
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\cores\teensy4\bootdata.c:
+   66  #elif defined(ARDUINO_TEENSY41)
+   67  	0x00800000,		// sflashA1Size			0x50
+   68: #elif defined(ARDUINO_TEENSY_MICROMOD)
+   69  	0x01000000,		// sflashA1Size			0x50
+   70  #else
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\cores\teensy4\core_pins.h:
+ 1207  
+ 1208  
+ 1209: #elif defined(__IMXRT1062__) && defined(ARDUINO_TEENSY_MICROMOD)
+ 1210  
+ 1211  #define CORE_NUM_TOTAL_PINS	46
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\cores\teensy4\eeprom.c:
+   45  #define FLASH_BASEADDR 0x607C0000
+   46  #define FLASH_SECTORS  63
+   47: #elif defined(ARDUINO_TEENSY_MICROMOD)
+   48  #define FLASH_BASEADDR 0x60FC0000
+   49  #define FLASH_SECTORS  63
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\cores\teensy4\HardwareSerial.cpp:
+  741  	{46,  9, 3, &IOMUXC_XBAR1_IN09_SELECT_INPUT, 0x1},
+  742  	{47,  8, 3, &IOMUXC_XBAR1_IN08_SELECT_INPUT, 0x1}
+  743: #elif defined(ARDUINO_TEENSY_MICROMOD)
+  744  	{34,  7, 3, &IOMUXC_XBAR1_IN07_SELECT_INPUT, 0x1},
+  745  	{35,  6, 3, &IOMUXC_XBAR1_IN06_SELECT_INPUT, 0x1},
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\cores\teensy4\HardwareSerial2.cpp:
+   51  static BUFTYPE rx_buffer2[SERIAL2_RX_BUFFER_SIZE];
+   52  
+   53: #ifndef ARDUINO_TEENSY_MICROMOD
+   54  static HardwareSerialIMXRT::hardware_t UART4_Hardware = {
+   55  	1, IRQ_LPUART4, &IRQHandler_Serial2, 
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\cores\teensy4\HardwareSerial4.cpp:
+   50  static BUFTYPE rx_buffer4[SERIAL4_RX_BUFFER_SIZE];
+   51  
+   52: #ifndef ARDUINO_TEENSY_MICROMOD
+   53  static HardwareSerialIMXRT::hardware_t UART3_Hardware = {
+   54  	3, IRQ_LPUART3, &IRQHandler_Serial4, 
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\cores\teensy4\HardwareSerial5.cpp:
+   63  	35, //  CTS pin
+   64  	2, //  CTS
+   65: 	#else // ARDUINO_TEENSY_MICROMOD
+   66  	{{21,2, &IOMUXC_LPUART8_RX_SELECT_INPUT, 1}, {39, 2, &IOMUXC_LPUART8_RX_SELECT_INPUT, 0}},
+   67  	{{20,2, &IOMUXC_LPUART8_TX_SELECT_INPUT, 1}, {38, 2, &IOMUXC_LPUART8_TX_SELECT_INPUT, 0}},
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\cores\teensy4\pins_arduino.h:
+  100    #define NUM_DIGITAL_PINS  55
+  101    #define NUM_ANALOG_INPUTS 18
+  102: #elif defined(ARDUINO_TEENSY_MICROMOD)
+  103    #define NUM_DIGITAL_PINS  46
+  104    #define NUM_ANALOG_INPUTS 14
+  ...
+  116    #define digitalPinHasPWM(p) ((p) <= 15 || (p) == 18 || (p) == 19 || ((p) >= 22 && (p) <= 25) || (p) == 28 || (p) == 29 || (p) == 33 || (p) == 36 || (p) == 37 || ((p) >= 42 && (p) <= 47) || (p) == 51 || (p) == 54)
+  117  
+  118: #elif defined(__IMXRT1062__) && defined(ARDUINO_TEENSY_MICROMOD)
+  119    #define analogInputToDigitalPin(p) (((p) <= 9) ? (p) + 14 : (( ((p) >= 14 && (p) <= 27)) ? (p) : -1))
+  120    #define digitalPinHasPWM(p) ((p) <= 15 || (p) == 18 || (p) == 19 || ((p) >= 22 && (p) <= 25) || (p) == 28 || (p) == 29 || (p) == 33 || (p) == 40 || (p) == 41 || (p) == 45)
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\cores\teensy4\pwm.c:
+   83  	{1, M(3, 0), 1, 1},  // FlexPWM3_0_A  54  // EMC_29
+   84  #endif
+   85: #ifdef ARDUINO_TEENSY_MICROMOD
+   86  	{1, M(1, 1), 2, 1},  // FlexPWM1_1_B  34  // SD_B0_03
+   87  	{1, M(1, 1), 1, 1},  // FlexPWM1_1_A  35  // SD_B0_02
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\cores\teensy4\usb_desc.c:
+  120    #elif defined(__IMXRT1062__) && defined(ARDUINO_TEENSY41)
+  121          0x80, 0x02, // Teensy 4.1
+  122:   #elif defined(__IMXRT1062__) && defined(ARDUINO_TEENSY_MICROMOD)
+  123          0x81, 0x02, // Teensy MicroMod
+  124    #else
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\cores\teensy4\avr\eeprom.h:
+   36  #elif defined(ARDUINO_TEENSY41)
+   37  #define E2END 0x10BB
+   38: #elif defined(ARDUINO_TEENSY_MICROMOD)
+   39  #define E2END 0x10BB
+   40  #endif
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\libraries\DmxSimple\DmxSimple.cpp:
+   20  static uint16_t dmxState = 0;
+   21  
+   22: #if defined(ARDUINO_TEENSY40) || defined(ARDUINO_TEENSY41) || defined(ARDUINO_TEENSY_MICROMOD) 
+   23  // Teensy 4.X has 32-bit ports
+   24  static volatile uint32_t *dmxPort;
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\libraries\FlexIO_t4\src\FlexIO_t4.cpp:
+   86  // T4 MicroMod
+   87  //-----------------------------------------------------------------------------
+   88: #elif defined(ARDUINO_TEENSY_MICROMOD)
+   89  const FlexIOHandler::FLEXIO_Hardware_t FlexIOHandler::flex1_hardware = {
+   90  	CCM_CCGR5, CCM_CCGR5_FLEXIO1(CCM_CCGR_ON),
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\libraries\FlexIO_t4\src\FlexIO_t4.h:
+   53  	static const uint8_t CNT_FLEX_PINS = 22;
+   54  	static const uint8_t CNT_FLEX_IO_OBJECT = 3;
+   55: #elif defined(ARDUINO_TEENSY_MICROMOD)
+   56  	static const uint8_t CNT_FLEX_PINS = 15;
+   57  	static const uint8_t CNT_FLEX_IO_OBJECT = 3;
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\libraries\LittleFS\src\LittleFS.cpp:
+  939  #define FLASH_SIZE  0x7C0000
+  940  #define SECTOR_SIZE 65536
+  941: #elif defined(ARDUINO_TEENSY_MICROMOD)
+  942  #define FLASH_SIZE  0xFC0000
+  943  #define SECTOR_SIZE 65536
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\libraries\QuadEncoder\QuadEncoder.cpp:
+   39  #endif
+   40  
+   41: #if defined( ARDUINO_TEENSY_MICROMOD)
+   42  const  QuadEncoder::ENC_Hardware_t QuadEncoder::hardware[] = {	
+   43  	{0, 0, &CORE_XIO_PIN0, 1, 17, 1},	{1, 1, &CORE_XIO_PIN1, 1, 16, 0},
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\libraries\QuadEncoder\QuadEncoder.h:
+   75  #endif
+   76  
+   77: #if defined(ARDUINO_TEENSY_MICROMOD)	
+   78  #define CORE_XIO_PIN36 IOMUXC_XBAR1_IN05_SELECT_INPUT // SD_B0_01, ALT3
+   79  #define CORE_XIO_PIN37 IOMUXC_XBAR1_IN04_SELECT_INPUT // SD_B0_00, ALT3
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\libraries\SD\src\SD.cpp:
+   30  #elif defined(ARDUINO_TEENSY40)
+   31  #define _SD_DAT3 38
+   32: #elif defined(ARDUINO_TEENSY_MICROMOD)
+   33  #define _SD_DAT3 39
+   34  #elif defined(ARDUINO_TEENSY35) || defined(ARDUINO_TEENSY36)
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\libraries\SoftwareSerial\SoftwareSerial.cpp:
+  109  
+  110  // Teensy MICROMOD
+  111: #elif defined(__IMXRT1062__) && defined(ARDUINO_TEENSY_MICROMOD)
+  112    #define SS1_RX  0
+  113    #define SS1_TX  1
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\libraries\Wire\WireIMXRT.cpp:
+  409  
+  410  
+  411: #if defined(ARDUINO_TEENSY_MICROMOD)
+  412  void lpi2c1_isr(void) { Wire.isr(); }
+  413  void lpi2c3_isr(void) { Wire2.isr(); }
+  ...
+  435  		{{17, 1 | 0x10, &IOMUXC_LPI2C3_SDA_SELECT_INPUT, 2}, {44, 2 | 0x10, &IOMUXC_LPI2C3_SDA_SELECT_INPUT, 1}},
+  436  		{{16, 1 | 0x10, &IOMUXC_LPI2C3_SCL_SELECT_INPUT, 2}, {45, 2 | 0x10, &IOMUXC_LPI2C3_SCL_SELECT_INPUT, 1}},
+  437: #else  // T4 and ARDUINO_TEENSY_MICROMOD
+  438  		{{17, 1 | 0x10, &IOMUXC_LPI2C3_SDA_SELECT_INPUT, 2}, {36, 2 | 0x10, &IOMUXC_LPI2C3_SDA_SELECT_INPUT, 1}},
+  439  		{{16, 1 | 0x10, &IOMUXC_LPI2C3_SCL_SELECT_INPUT, 2}, {37, 2 | 0x10, &IOMUXC_LPI2C3_SCL_SELECT_INPUT, 1}},
+  ...
+  452  //TwoWire Wire2(&IMXRT_LPI2C4, TwoWire::i2c4_hardware);
+  453  
+  454: #if defined(ARDUINO_TEENSY_MICROMOD)
+  455  	TwoWire Wire2(IMXRT_LPI2C3_ADDRESS, TwoWire::i2c3_hardware);
+  456  	TwoWire Wire1(IMXRT_LPI2C4_ADDRESS, TwoWire::i2c4_hardware);
+  ...
+  461  
+  462  
+  463: #if defined(ARDUINO_TEENSY_MICROMOD)
+  464  PROGMEM
+  465  constexpr TwoWire::I2C_Hardware_t TwoWire::i2c2_hardware = {
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\libraries\Wire\WireIMXRT.h:
+  196  extern TwoWire Wire1;
+  197  extern TwoWire Wire2;
+  198: #if defined(ARDUINO_TEENSY_MICROMOD)
+  199  extern TwoWire Wire3;
+  200  #endif
+
+25 matches across 21 files
