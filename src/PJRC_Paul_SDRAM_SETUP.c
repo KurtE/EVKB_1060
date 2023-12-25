@@ -1,3 +1,10 @@
+/*
+For MPU, probably easiest to add this to configure_cache() in startup.c
+Code:
+        SCB_MPU_RBAR = 0x80000000 | REGION(i++); // SDRAM
+        SCB_MPU_RASR = MEM_CACHE_WBWA | READWRITE | NOEXEC | SIZE_32M;
+*/
+
 unsigned int ns_to_clocks(float ns, float freq)
 {
     float clocks = ceilf(ns * 1.0e-9f * freq);
