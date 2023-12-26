@@ -1,5 +1,7 @@
 #include "SDRAM_t4.h"
 
+#define NOCAP 0
+
 unsigned int SDRAM_t4::ns_to_clocks(float ns, float freq)
 {
     float clocks = ceilf(ns * 1.0e-9f * freq);
@@ -248,11 +250,12 @@ bool SDRAM_t4::init()
 
     configure_sdram_pins();
 
-    // turn on SEMC hardware, same settings as NXP's SDK
-    SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F);
-    // uncomment to enable SEMC_MCR_DQSMD (EMC_39) but make sure you comment out the above line first
-    //SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F) | SEMC_MCR_DQSMD;
-    
+    #if NOCAP
+	SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F) | SEMC_MCR_DQSMD;
+    #else  // enable SEMC_MCR_DQSMD (EMC_39
+	SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F);
+    #endif
+
     // TODO: reference manual page 1364 says "Recommend to set BMCR0 with 0x0 for
     // applications that require restrict sequence of transactions", same on BMCR1
     SEMC_BMCR0 = SEMC_BMCR0_WQOS(5) | SEMC_BMCR0_WAGE(8) |
