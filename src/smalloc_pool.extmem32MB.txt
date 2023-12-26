@@ -1,0 +1,104 @@
+Support for SDRAM as:
+   49  #ifdef ARDUINO_TEENSY41
+   50: extern struct smalloc_pool extmem_smalloc_pool;
+   51  #endif
+
+in SDRAM where T_4.1 looks to set it up with size of PSRAM:: external_psram_size * 0x100000 
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\cores\teensy4\extmem.c:
+    9  // Teensy 4.1 external RAM address range is 0x70000000 to 0x7FFFFFFF
+   10  #define HAS_EXTRAM
+   11: #define IS_EXTMEM(addr) (((uint32_t)ptr >> 28) == 7)
+   12  #endif
+   13  
+   14  
+   15: void *extmem_malloc(size_t size)
+   16  {
+   17  #ifdef HAS_EXTRAM
+   18: 	void *ptr = sm_malloc_pool(&extmem_smalloc_pool, size);
+   19  	if (ptr) return ptr;
+   20  #endif
+   ..
+   22  }
+   23  
+   24: void extmem_free(void *ptr)
+   25  {
+   26  #ifdef HAS_EXTRAM
+   27: 	if (IS_EXTMEM(ptr)) {
+   28: 		sm_free_pool(&extmem_smalloc_pool, ptr);
+   29  		return;
+   30  	}
+   ..
+   33  }
+   34  
+   35: void *extmem_calloc(size_t nmemb, size_t size)
+   36  {
+   37  #ifdef HAS_EXTRAM
+   38  	// Note: It is assumed that the pool was created with do_zero set to true
+   39: 	void *ptr = sm_malloc_pool(&extmem_smalloc_pool, nmemb*size);
+   40  	if (ptr) return ptr;
+   41  #endif
+   ..
+   43  }
+   44  
+   45: void *extmem_realloc(void *ptr, size_t size)
+   46  {
+   47  #ifdef HAS_EXTRAM
+   48: 	if (IS_EXTMEM(ptr)) {
+   49: 		return sm_realloc_pool(&extmem_smalloc_pool, ptr, size);
+   50  	}
+   51  #endif
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\cores\teensy4\smalloc.h:
+    6  // used from Arduino sketches and libraries.
+    7  //
+    8: //   void *extmem_malloc(size_t size);
+    9: //   void extmem_free(void *ptr);
+   10: //   void *extmem_calloc(size_t nmemb, size_t size);
+   11: //   void *extmem_realloc(void *ptr, size_t size);
+   12  
+   13  
+   ..
+   48  
+   49  #ifdef ARDUINO_TEENSY41
+   50: extern struct smalloc_pool extmem_smalloc_pool;
+   51  #endif
+   52  
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\cores\teensy4\startup.c:
+   45  uint8_t external_psram_size = 0;
+   46  #ifdef ARDUINO_TEENSY41
+   47: struct smalloc_pool extmem_smalloc_pool;
+   48  #endif
+   49  
+   ..
+  494  			external_psram_size = 8;
+  495  		}
+  496: 		// TODO: zero uninitialized EXTMEM variables
+  497: 		// TODO: copy from flash to initialize EXTMEM variables
+  498: 		sm_set_pool(&extmem_smalloc_pool, &_extram_end,
+  499  			external_psram_size * 0x100000 -
+  500  			((uint32_t)&_extram_end - (uint32_t)&_extram_start),
+  ...
+  502  	} else {
+  503  		// No PSRAM
+  504: 		memset(&extmem_smalloc_pool, 0, sizeof(extmem_smalloc_pool));
+  505  	}
+  506  }
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\cores\teensy4\wiring.h:
+  225  void loop(void);
+  226  
+  227: void *extmem_malloc(size_t size);
+  228: void extmem_free(void *ptr);
+  229: void *extmem_calloc(size_t nmemb, size_t size);
+  230: void *extmem_realloc(void *ptr, size_t size);
+  231  
+  232  #ifdef __cplusplus
+
+T:\T_Drive\arduino-1.8.19\hardware\teensy\avr\cores\teensy4\avr\pgmspace.h:
+   30  #define PROGMEM __attribute__((section(".progmem")))
+   31  #define FLASHMEM __attribute__((section(".flashmem")))
+   32: #define EXTMEM __attribute__((section(".externalram")))
+   33  
+   34  #define PGM_P  const char *
