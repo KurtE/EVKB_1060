@@ -248,11 +248,11 @@ bool SDRAM_t4::init()
 
     configure_sdram_pins();
 
-    #if NOCAP
-	SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F) | SEMC_MCR_DQSMD;
-    #else  // enable SEMC_MCR_DQSMD (EMC_39
-	SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F);
-    #endif
+    if ( NOCAP )
+	   SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F) | SEMC_MCR_DQSMD;
+    else  // enable SEMC_MCR_DQSMD (EMC_39
+	   SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F);
+    
 
     // TODO: reference manual page 1364 says "Recommend to set BMCR0 with 0x0 for
     // applications that require restrict sequence of transactions", same on BMCR1

@@ -20,7 +20,7 @@ private:
     static bool IPCommandComplete();
     
     //set NOCAP to 1 if cap C29 is removed
-    uint8_t NOCAP = 0;
+    static const uint8_t NOCAP = 0;
     
 };
 #endif
