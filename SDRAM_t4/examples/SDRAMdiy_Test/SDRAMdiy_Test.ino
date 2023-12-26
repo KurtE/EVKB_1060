@@ -155,6 +155,8 @@ void doTests() {
   Serial.printf(" test ran for %.2f seconds\n", (float)msec / 1000000.0f);
   Serial.printf("Fixed Pattern Write ran for %.2f and Read/Test %.2f secs\n", (float)wrMSp / 1000000.0f , (float)rdMSp / 1000000.0f);
   Serial.printf("Fixed Pattern Test %.2f MB per sec\n", (float) (size*tstMBp) / ((float)(wrMSp + rdMSp) / 1000000.0f));
+  Serial.printf("Fixed Pattern Test WRITES %.2f MB per sec\n", (float) (size*tstMBp/2) / ((float)(wrMSp) / 1000000.0f));
+  Serial.printf("Fixed Pattern Test & READ %.2f MB per sec\n", (float) (size*tstMBp/2) / ((float)(rdMSp) / 1000000.0f));
   Serial.printf("PsuedoRnd Patt Write ran for %.2f and Read/Test %.2f secs\n", (float)wrMSr / 1000000.0f , (float)rdMSr / 1000000.0f);
   Serial.printf("PsuedoRnd Patt Test %.2f MB per sec\n", (float) (size*tstMBr) / ((float)(wrMSr + rdMSr) / 1000000.0f));
   if (memory_ok)
