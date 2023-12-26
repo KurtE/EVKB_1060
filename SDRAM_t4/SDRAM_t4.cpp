@@ -1,7 +1,5 @@
 #include "SDRAM_t4.h"
 
-#define NOCAP 0
-
 unsigned int SDRAM_t4::ns_to_clocks(float ns, float freq)
 {
     float clocks = ceilf(ns * 1.0e-9f * freq);

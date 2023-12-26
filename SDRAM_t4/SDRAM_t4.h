@@ -10,13 +10,17 @@
 
 class SDRAM_t4 {
 public:
-    bool init();
+    constexpr SDRAM_t4() {};
+    static bool init();
     
 private:
-    unsigned int ns_to_clocks(float ns, float freq);
-    void configure_sdram_pins();
-    bool SendIPCommand(uint32_t address, uint16_t command, uint32_t write, uint32_t *read);
-    bool IPCommandComplete();
+    static unsigned int ns_to_clocks(float ns, float freq);
+    static void configure_sdram_pins();
+    static bool SendIPCommand(uint32_t address, uint16_t command, uint32_t write, uint32_t *read);
+    static bool IPCommandComplete();
+    
+    //set NOCAP to 1 if cap C29 is removed
+    uint8_t NOCAP = 0;
     
 };
 #endif
