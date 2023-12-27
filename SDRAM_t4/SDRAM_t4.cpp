@@ -226,9 +226,20 @@ bool SDRAM_t4::init()
     CCM_CBCDR = (CCM_CBCDR & ~(CCM_CBCDR_SEMC_PODF(7))) |
         CCM_CBCDR_SEMC_CLK_SEL | CCM_CBCDR_SEMC_ALT_CLK_SEL |
         CCM_CBCDR_SEMC_PODF(clockdiv-1);
+        
+    /* Experimental note (see https://forum.pjrc.com/index.php?threads/call-to-arms-teensy-sdram-true.73898/post-335619):
+    /*  if you want to try 198 MHz overclock
+    /*  const unsigned int clockdiv = 2; // PLL2_PFD2 / 2 = 396 / 2 = 198 MHz
+    /*
+    /*    CCM_CBCDR = (CCM_CBCDR & ~(CCM_CBCDR_SEMC_PODF(7) | CCM_CBCDR_SEMC_ALT_CLK_SEL)) |
+    /*    CCM_CBCDR_SEMC_CLK_SEL | CCM_CBCDR_SEMC_PODF(clockdiv-1);  
+    /* If it doesn't work, maybe try soldering a 5pF or 10pF capacitor at C29 */    
+        
     delayMicroseconds(1);
     const float freq = 664.62e6 / (float)clockdiv;
     CCM_CCGR3 |= CCM_CCGR3_SEMC(CCM_CCGR_ON);
+    
+
 
     // software reset
     SEMC_BR0 = 0;
@@ -270,12 +281,12 @@ bool SDRAM_t4::init()
         SEMC_SDRAMCR0_BL(3) |   // 3 = 8 word burst length
         SEMC_SDRAMCR0_PS;       // use 16 bit data
    SEMC_SDRAMCR1 =
-        SEMC_SDRAMCR1_ACT2PRE(ns_to_clocks(42, freq)) | // tRAS: ACTIVE to PRECHARGE
-        SEMC_SDRAMCR1_CKEOFF(ns_to_clocks(42, freq)) |  // self refresh
-        SEMC_SDRAMCR1_WRC(ns_to_clocks(12, freq)) |     // tWR: WRITE recovery
-        SEMC_SDRAMCR1_RFRC(ns_to_clocks(67, freq)) |    // tRFC or tXSR: REFRESH recovery
-        SEMC_SDRAMCR1_ACT2RW(ns_to_clocks(18, freq)) |  // tRCD: ACTIVE to READ/WRITE
-        SEMC_SDRAMCR1_PRE2ACT(ns_to_clocks(18, freq));  // tRP: PRECHARGE to ACTIVE/REFRESH
+        SEMC_SDRAMCR1_ACT2PRE((ns_to_clocks(42, freq)-1)) | // tRAS: ACTIVE to PRECHARGE
+        SEMC_SDRAMCR1_CKEOFF((ns_to_clocks(42, freq)-1)) |  // self refresh
+        SEMC_SDRAMCR1_WRC((ns_to_clocks(12, freq)-1)) |     // tWR: WRITE recovery
+        SEMC_SDRAMCR1_RFRC((ns_to_clocks(67, freq)-1)) |    // tRFC or tXSR: REFRESH recovery
+        SEMC_SDRAMCR1_ACT2RW((ns_to_clocks(18, freq)-1)) |  // tRCD: ACTIVE to READ/WRITE
+        SEMC_SDRAMCR1_PRE2ACT((ns_to_clocks(18, freq)-1));  // tRP: PRECHARGE to ACTIVE/REFRESH
    SEMC_SDRAMCR2 = 0; // TODO... page 1425
    SEMC_SDRAMCR3 = 0; // TODO...page 1426
    SEMC_SDRAMCR2 =
