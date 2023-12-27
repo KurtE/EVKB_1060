@@ -12,10 +12,10 @@ bool check_fixed_pattern(uint32_t pattern);
 bool check_lfsr_pattern(uint32_t seed);
 
 uint32_t testMsec[100][4]; // Write us, Read Test us, Val Seed/Pattern, Type {1=Pat, 2=Seed, 3=Fail)
-#define vRd 0
-#define vWr 1
-#define vPt 2
-#define vTp 3
+#define vRd 0 // read time
+#define vWr 1 // write time
+#define vPt 2 // Pattern/Seed
+#define vTp 3 // 0=unused, 1=success fixed, 2=succ PRandom, 3=fail fixed, 4=fail=PRandom
 int tt = 0;
 
 bool memory_ok = false;
@@ -148,7 +148,11 @@ void doTests() {
   memory_ok = true;
   for ( int ii = 0; ii < 100; ii++ ) {
     if ( 3 == testMsec[ii][vTp] ) {
-      Serial.printf("\t\ttest FAIL : Seed %08X == Pattern %u  \n", testMsec[ii][vPt], testMsec[ii][vPt] );
+      Serial.printf("\t\ttest FAIL : Fixed Pattern %u  \n", testMsec[ii][vPt] );
+      memory_ok = false;
+    }
+    if ( 4 == testMsec[ii][vTp] ) {
+      Serial.printf("\t\ttest FAIL : Peusdo Random Seed %08X  \n", testMsec[ii][vPt] );
       memory_ok = false;
     }
   }
@@ -210,7 +214,7 @@ bool check_lfsr_pattern(uint32_t seed)
   volatile uint32_t *p;
   uint32_t reg;
 
-  testMsec[tt][vTp] = 3;
+  testMsec[tt][vTp] = 4;
   testMsec[tt][vPt] = seed;
   Serial.printf("testing with pseudo-random sequence, seed=%u\t", seed);
   reg = seed;
@@ -259,13 +263,17 @@ bool check_lfsr_pattern(uint32_t seed)
   return true;
 }
 
+uint32_t cntLoopTests=0;
 void loop()
 {
   digitalWrite(13, HIGH);
   delay(100);
   if (!memory_ok)
     digitalWrite(13, LOW); // rapid blink if any test fails
-  else
+  else {
     doTests();
+    cntLoopTests+=1;
+    Serial.printf("\t\tLoop doTest() count=%u\n\n", cntLoopTests);
+  }
   delay(100);
 }
