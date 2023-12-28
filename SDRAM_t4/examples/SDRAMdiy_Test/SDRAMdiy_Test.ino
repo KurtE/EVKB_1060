@@ -15,16 +15,32 @@ uint32_t testMsec[100][4]; // Write us, Read Test us, Val Seed/Pattern, Type {1=
 #define vRd 0 // read time
 #define vWr 1 // write time
 #define vPt 2 // Pattern/Seed
-#define vTp 3 // 0=unused, 1=success fixed, 2=succ PRandom, 3=fail fixed, 4=fail=PRandom
+#define vTp 3 // 0=unused, 1=success fixed, 2=succ PRandom, 3=fail fixed, 4=fail=PRandom, 5=succ PRand HalfCopy
 int tt = 0;
 
 bool memory_ok = false;
-uint32_t *memory_begin, *memory_end;
+uint32_t *memory_begin, *memory_mid, *memory_end;
 
 bool check_fixed_pattern(uint32_t pattern);
 bool check_lfsr_pattern(uint32_t seed);
 void SDRAMsetup();
 uint8_t size = external_psram_size;
+
+uint32_t cntLoopTests=0;
+void loop()
+{
+  digitalWrite(13, HIGH);
+  delay(100);
+  if (!memory_ok)
+    digitalWrite(13, LOW); // rapid blink if any test fails
+  else {
+    doTests();
+    cntLoopTests+=1;
+    Serial.printf("\t\tLoop doTest() count=%u\n\n", cntLoopTests);
+  }
+  delay(100);
+}
+
 void setup()
 {
   while (!Serial) ; // wait
@@ -41,24 +57,26 @@ void setup()
 
   size = 32;
   memory_begin = (uint32_t *)(0x80000000);
+  memory_mid = (uint32_t *)(0x80000000 + size * 524288);
   memory_end = (uint32_t *)(0x80000000 + size * 1048576);
 #else // T_4.1 PSRAM
   const float clocks[4] = {396.0f, 720.0f, 664.62f, 528.0f};
   const float frequency = clocks[(CCM_CBCMR >> 8) & 3] / (float)(((CCM_CBCMR >> 29) & 7) + 1);
   Serial.printf(" CCM_CBCMR=%08X (%.1f MHz)\n", CCM_CBCMR, frequency);
   memory_begin = (uint32_t *)(0x70000000);
+  memory_mid = (uint32_t *)(0x70000000 + size * 524288);
   memory_end = (uint32_t *)(0x70000000 + size * 1048576);
 #endif
   Serial.printf("Compile Time:: " __FILE__ " " __DATE__ " " __TIME__ "\n");
-  Serial.printf("EXTMEM Memory Test, %d Mbyte\n", size);
-  Serial.printf("EXTMEM Memory begin, %08X \n", memory_begin);
-  Serial.printf("EXTMEM Memory end, %08X \n", memory_end);
+  Serial.printf("EXTMEM Memory Test, %d Mbyte\t", size);
+  Serial.printf("begin, %08X \t", memory_begin);
+  Serial.printf("middle, %08X \t", memory_mid);
+  Serial.printf("end, %08X \n", memory_end);
   doTests();
   readRepeat = 5;
 }
 
 void doTests() {
-
   if (size == 0) return;
   uint32_t msec = 0;
   tt=0;
@@ -145,6 +163,15 @@ void doTests() {
       wrMSr += testMsec[ii][vWr];
     }
   }
+  for ( int ii = 0; ii < 100; ii++ ) {
+    if ( 5 == testMsec[ii][vTp] ) {
+      Serial.printf("test RndSeed HalfCopy %u Write %u us Read/Test %u us \n", testMsec[ii][vPt], testMsec[ii][vWr], testMsec[ii][vRd] );
+      msec += testMsec[ii][vRd] + testMsec[ii][vWr];
+      tstMBr +=2;
+      rdMSr += testMsec[ii][vRd];
+      wrMSr += testMsec[ii][vWr];
+    }
+  }
   memory_ok = true;
   for ( int ii = 0; ii < 100; ii++ ) {
     if ( 3 == testMsec[ii][vTp] ) {
@@ -209,7 +236,7 @@ bool check_fixed_pattern(uint32_t pattern)
 }
 
 // fill the entire RAM with a pseudo-random sequence, then check it
-bool check_lfsr_pattern(uint32_t seed)
+bool check_lfsr_patternXX(uint32_t seed)
 {
   volatile uint32_t *p;
   uint32_t reg;
@@ -263,17 +290,116 @@ bool check_lfsr_pattern(uint32_t seed)
   return true;
 }
 
-uint32_t cntLoopTests=0;
-void loop()
+void memory_copy32(uint32_t *dest, const uint32_t *src, uint32_t *dest_end)
 {
-  digitalWrite(13, HIGH);
-  delay(100);
-  if (!memory_ok)
-    digitalWrite(13, LOW); // rapid blink if any test fails
-  else {
-    doTests();
-    cntLoopTests+=1;
-    Serial.printf("\t\tLoop doTest() count=%u\n\n", cntLoopTests);
+#if 0
+  if (dest == src) return;
+  do {
+    *dest++ = *src++;
+  } while (dest < dest_end);
+#else
+  asm volatile(
+  " cmp %[src], %[dest]   \n"
+  " beq.n 2f      \n"
+  "1: ldr.w r3, [%[src]], #4  \n"
+  " str.w r3, [%[dest]], #4 \n"
+  " cmp %[end], %[dest]   \n"
+  " bhi.n 1b      \n"
+  "2:         \n"
+  : [dest] "+r" (dest), [src] "+r" (src) : [end] "r" (dest_end) : "r3", "memory");
+#endif
+}
+
+void memory_copy16(uint32_t *d32, const uint32_t *s32, uint32_t *de32)
+{
+  uint16_t *dest = (uint16_t *)d32;
+  uint16_t *src = (uint16_t *)s32;
+  uint16_t *dest_end = (uint16_t *)de32;
+  if (dest == src) return;
+  do {
+    *dest++ = *src++;
+  } while (dest < dest_end);
+}
+
+void memory_copy8(uint32_t *d32, const uint32_t *s32, uint32_t *de32)
+{
+  uint8_t *dest = (uint8_t *)d32;
+  uint8_t *src = (uint8_t *)s32;
+  uint8_t *dest_end = (uint8_t *)de32;
+  if (dest == src) return;
+  do {
+    *dest++ = *src++;
+  } while (dest < dest_end);
+}
+
+// fill the entire RAM with a pseudo-random sequence, then check it
+bool check_lfsr_pattern(uint32_t seed)
+{
+  volatile uint32_t *p;
+  uint32_t reg;
+  static uint16_t idxHalfCopy=32;
+
+  testMsec[tt][vTp] = 4;
+  testMsec[tt][vPt] = seed;
+  Serial.printf("testing with pseudo-random sequence HalfCopy %d, seed=%u\t", idxHalfCopy, seed );
+  reg = seed;
+  testMsec[tt][vWr] = micros();
+  for (p = memory_begin; p < memory_mid; p++) {
+    *p = reg;
+    for (int i = 0; i < 3; i++) {
+      if (reg & 1) {
+        reg >>= 1;
+        reg ^= 0x7A5BC2E3;
+      } else {
+        reg >>= 1;
+      }
+    }
   }
-  delay(100);
+  testMsec[tt][vWr] = micros() - testMsec[tt][vWr];
+
+  switch( idxHalfCopy ) {
+    case 32:
+    default:
+      memory_copy32( memory_mid, memory_begin, memory_end );
+      idxHalfCopy = 16;
+      break;
+    case 16:
+      memory_copy16( memory_mid, memory_begin, memory_end );
+      idxHalfCopy = 8;
+      break;
+    case 8:
+      memory_copy8( memory_mid, memory_begin, memory_end );
+      idxHalfCopy = 32;
+      break;
+  }
+  for ( int ii = 0; ii < readRepeat; ii++) {
+    arm_dcache_flush_delete((void *)memory_begin,
+                            (uint32_t)memory_end - (uint32_t)memory_begin);
+    reg = seed;
+
+    testMsec[tt][vRd] = micros();
+    for (p = memory_mid; p < memory_end; p++) {
+      uint32_t actual = *p;
+      if (actual != reg) {
+        tt++;
+        Serial.println();
+        return fail_message(p, actual, reg);
+      }
+      //Serial.printf(" reg=%08X\n", reg);
+      for (int i = 0; i < 3; i++) {
+        if (reg & 1) {
+          reg >>= 1;
+          reg ^= 0x7A5BC2E3;
+        } else {
+          reg >>= 1;
+        }
+      }
+    }
+    testMsec[tt][vRd] = micros() - testMsec[tt][vRd];
+    if ( readRepeat > 1 ) Serial.print('.');
+  }
+  testMsec[tt][vTp] = 5;
+  tt++;
+  Serial.println();
+  return true;
 }
