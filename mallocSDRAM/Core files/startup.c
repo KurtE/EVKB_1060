@@ -4,11 +4,9 @@
 #include "avr/pgmspace.h"
 #include "smalloc.h"
 #include <string.h>
-
 #include "debug/printf.h"
 
-//kludge to test sdram
-#define extSDRAM
+#include "hasSDRAMKludge.h"
 
 // from the linker
 extern unsigned long _stextload;
@@ -23,6 +21,7 @@ extern unsigned long _flexram_bank_config;
 extern unsigned long _estack;
 extern unsigned long _extram_start;
 extern unsigned long _extram_end;
+
 #ifdef extSDRAM
 extern unsigned long _extsdram_start;
 extern unsigned long _extsdram_end;
@@ -44,6 +43,7 @@ void usb_pll_start();
 extern void analog_init(void); // analog.c
 extern void pwm_init(void); // pwm.c
 extern void tempmon_init(void);  //tempmon.c
+extern bool sdram_init(void); //sdram
 extern float tempmonGetTemp(void);
 extern unsigned long rtc_get(void);
 uint32_t set_arm_clock(uint32_t frequency); // clockspeed.c
@@ -194,10 +194,17 @@ static void ResetHandler2(void)
 #endif
 //kludge for sdram
 #ifdef extSDRAM
+    if(!sdram_init()) {
+	IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_03 = 5;
+	IOMUXC_SW_PAD_CTL_PAD_GPIO_B0_03 = IOMUXC_PAD_DSE(7);
+	IOMUXC_GPR_GPR27 = 0xFFFFFFFF;
+	GPIO7_GDIR |= (1<<3);
+	GPIO7_DR_SET = (1<<3); // digitalWrite(13, HIGH);
+    }
     // TODO: zero uninitialized EXTMEM variables
     // TODO: copy from flash to initialize EXTMEM variables
     sm_set_pool(&extsdram_smalloc_pool, &_extsdram_end,
-        external_psram_size * 0x100000 -
+        external_sdram_size * 0x100000 -
         ((uint32_t)&_extsdram_end - (uint32_t)&_extsdram_start),
         1, NULL);
 #endif
@@ -205,7 +212,7 @@ static void ResetHandler2(void)
 	pwm_init();
 	tempmon_init();
 	startup_middle_hook();
-
+    
 #if !defined(TEENSY_INIT_USB_DELAY_BEFORE)
         #define TEENSY_INIT_USB_DELAY_BEFORE 20
 #endif
@@ -339,11 +346,11 @@ FLASHMEM void configure_cache(void)
 
 	SCB_MPU_RBAR = 0x70000000 | REGION(i++); // FlexSPI2
 	SCB_MPU_RASR = MEM_CACHE_WBWA | READWRITE | NOEXEC | SIZE_16M;
-
+#ifdef extSDRAM
 	SCB_MPU_RBAR = 0x80000000 | REGION(i++); // SEMC: SDRAM, NAND, SRAM, etc
 	SCB_MPU_RASR = MEM_CACHE_WBWA | READWRITE | NOEXEC | SIZE_1G;
 	// SDRAM PCB: https://forum.pjrc.com/index.php?threads/73898/#post-334041
-
+#endif
 	SCB_MPU_CTRL = SCB_MPU_CTRL_ENABLE;
 
 	// cache enable, ARM DDI0403E, pg 628
