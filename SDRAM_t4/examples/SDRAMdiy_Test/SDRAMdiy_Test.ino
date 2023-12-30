@@ -2,6 +2,8 @@
 
 SDRAM_t4 sdram;
 
+#define ERR_ABORT 20 // will print this many errors and abort this test
+
 #define TEENSY_SDRAM 1 // '1' SDRAM ELSE '0' T_4.1 PSRAM TEST
 int readRepeat = 1; // Writes once to Test memory, will repeat reads and test compare 'readRepeat' times
 // https://github.com/PaulStoffregen/teensy41_psram_memtest/blob/master/teensy41_psram_memtest.ino
@@ -11,14 +13,16 @@ extern "C" uint8_t external_psram_size;
 bool check_fixed_pattern(uint32_t pattern);
 bool check_lfsr_pattern(uint32_t seed);
 
-uint32_t testMsec[100][4]; // Write us, Read Test us, Val Seed/Pattern, Type {1=Pat, 2=Seed, 3=Fail)
+uint32_t testMsec[100][6]; // Write us, Read Test us, Val Seed/Pattern, Type {1=Pat, 2=Seed, 3=Fail)
 #define vRd 0 // read time
 #define vWr 1 // write time
 #define vPt 2 // Pattern/Seed
 #define vTp 3 // 0=unused, 1=success fixed, 2=succ PRandom, 3=fail fixed, 4=fail=PRandom, 5=succ PRand HalfCopy
+#define vCt 4 // Read Cnt
+#define vFl 5 // Fail Cnt
 int tt = 0;
 
-bool memory_ok = false;
+bool memory_ok = true;
 uint32_t *memory_begin, *memory_mid, *memory_end;
 
 bool check_fixed_pattern(uint32_t pattern);
@@ -26,19 +30,52 @@ bool check_lfsr_pattern(uint32_t seed);
 void SDRAMsetup();
 uint8_t size = external_psram_size;
 
+uint32_t getLFSR()
+{
+  static uint32_t reg = 4197336575ul;
+  for (int i = 0; i < 3; i++) {
+    if (reg & 1) {
+      reg >>= 1;
+      reg ^= 0x7A5BC2E3;
+    } else {
+      reg >>= 1;
+    }
+  }
+  return reg;
+}
+
+void tmr_callback() {
+  static volatile uint32_t Fcount = 0;
+  Fcount++;
+  for ( int ii=1; ii<10; ii++ ) {
+    Fcount += memory_begin[ getLFSR()%(33554432ul/4) ];
+// Serial.printf( "\n %u", Fcount );
+// Serial.printf( "\t %u", getLFSR()%(33554432ul/4) );
+  }
+}
+
+#include "IntervalTimer.h"
+IntervalTimer tTimer;
+bool bTimer=false;
 uint32_t cntLoopTests=0;
 void loop()
 {
+  elapsedMillis aTime;
   digitalWrite(13, HIGH);
-  delay(100);
-  if (!memory_ok)
+  if (!memory_ok) {
+    delay(100);
     digitalWrite(13, LOW); // rapid blink if any test fails
+    delay(100);
+  }
   else {
+    aTime = 0;
     doTests();
     cntLoopTests+=1;
-    Serial.printf("\t\tLoop doTest() count=%u\n\n", cntLoopTests);
+    Serial.printf("\t\tLoop doTest() count=%u  readRepeat=%u  bTimer=%u LoopTest() Mins=%.2f\n\n", cntLoopTests, readRepeat, bTimer*1, aTime/60000.0 );
+    if ( readRepeat < 50 ) {
+      readRepeat += 5;
+    }
   }
-  delay(100);
 }
 
 void setup()
@@ -46,7 +83,6 @@ void setup()
   while (!Serial) ; // wait
   pinMode(13, OUTPUT);
   if ( CrashReport ) Serial.print( CrashReport );
-
 #if TEENSY_SDRAM
   if (sdram.init()) {
     Serial.print( "\tSUCCESS sdram.init()\n");
@@ -67,13 +103,13 @@ void setup()
   memory_mid = (uint32_t *)(0x70000000 + size * 524288);
   memory_end = (uint32_t *)(0x70000000 + size * 1048576);
 #endif
+
   Serial.printf("Compile Time:: " __FILE__ " " __DATE__ " " __TIME__ "\n");
   Serial.printf("EXTMEM Memory Test, %d Mbyte\t", size);
   Serial.printf("begin, %08X \t", memory_begin);
   Serial.printf("middle, %08X \t", memory_mid);
   Serial.printf("end, %08X \n", memory_end);
-  doTests();
-  readRepeat = 5;
+  readRepeat = 1;
 }
 
 void doTests() {
@@ -81,63 +117,58 @@ void doTests() {
   uint32_t msec = 0;
   tt=0;
 
-  check_fixed_pattern(0x5A698421);
-  check_fixed_pattern(0x55555555);
-  check_fixed_pattern(0x33333333);
-  check_fixed_pattern(0x0F0F0F0F);
-  check_fixed_pattern(0x00FF00FF);
-  check_fixed_pattern(0x0000FFFF);
-  check_fixed_pattern(0xAAAAAAAA);
-  check_fixed_pattern(0xCCCCCCCC);
-  check_fixed_pattern(0xF0F0F0F0);
-  check_fixed_pattern(0xFF00FF00);
-  check_fixed_pattern(0xFFFF0000);
-  check_fixed_pattern(0xFFFFFFFF);
-  check_fixed_pattern(0x00000000);
-  check_lfsr_pattern(2976674124ul);
-  check_lfsr_pattern(1438200953ul);
-  check_lfsr_pattern(3413783263ul);
-  check_lfsr_pattern(1900517911ul);
-  check_lfsr_pattern(1227909400ul);
-  check_lfsr_pattern(276562754ul);
-  check_lfsr_pattern(146878114ul);
-  check_lfsr_pattern(615545407ul);
-  check_lfsr_pattern(110497896ul);
-  check_lfsr_pattern(74539250ul);
-  check_lfsr_pattern(4197336575ul);
-  check_lfsr_pattern(2280382233ul);
-  check_lfsr_pattern(542894183ul);
-  check_lfsr_pattern(3978544245ul);
-  check_lfsr_pattern(2315909796ul);
-  check_lfsr_pattern(3736286001ul);
-  check_lfsr_pattern(2876690683ul);
-  check_lfsr_pattern(215559886ul);
-  check_lfsr_pattern(539179291ul);
-  check_lfsr_pattern(537678650ul);
-  check_lfsr_pattern(4001405270ul);
-  check_lfsr_pattern(2169216599ul);
-  check_lfsr_pattern(4036891097ul);
-  check_lfsr_pattern(1535452389ul);
-  check_lfsr_pattern(2959727213ul);
-  check_lfsr_pattern(4219363395ul);
-  check_lfsr_pattern(1036929753ul);
-  check_lfsr_pattern(2125248865ul);
-  check_lfsr_pattern(3177905864ul);
-  check_lfsr_pattern(2399307098ul);
-  check_lfsr_pattern(3847634607ul);
-  check_lfsr_pattern(27467969ul);
-  check_lfsr_pattern(520563506ul);
-  check_lfsr_pattern(381313790ul);
-  check_lfsr_pattern(4174769276ul);
-  check_lfsr_pattern(3932189449ul);
-  check_lfsr_pattern(4079717394ul);
-  check_lfsr_pattern(868357076ul);
-  check_lfsr_pattern(2474062993ul);
-  check_lfsr_pattern(1502682190ul);
-  check_lfsr_pattern(2471230478ul);
-  check_lfsr_pattern(85016565ul);
-  check_lfsr_pattern(1427530695ul);
-  check_lfsr_pattern(1100533073ul);
+  uint ii;
+  static uint32_t fixPatt[ 13 ] = { 0x5A698421, 0x55555555, 0x33333333, 0x0F0F0F0F, 0x00FF00FF, 0x0000FFFF, 0xAAAAAAAA, 0xCCCCCCCC, 0xF0F0F0F0, 0xFF00FF00, 0xFFFF0000, 0xFFFFFFFF, 0x00000000 };
+
+  static uint32_t lfsrPatt[ 44 ] = { 2976674124ul, 1438200953ul, 3413783263ul, 1900517911ul, 1227909400ul, 276562754ul, 146878114ul, 615545407ul, 110497896ul, 74539250ul, 4197336575ul, 2280382233ul, 542894183ul, 3978544245ul, 2315909796ul, 3736286001ul, 2876690683ul, 215559886ul, 539179291ul, 537678650ul, 4001405270ul, 2169216599ul, 4036891097ul, 1535452389ul, 2959727213ul, 4219363395ul, 1036929753ul, 2125248865ul, 3177905864ul, 2399307098ul, 3847634607ul, 27467969ul, 520563506ul, 381313790ul, 4174769276ul, 3932189449ul, 4079717394ul, 868357076ul, 2474062993ul, 1502682190ul, 2471230478ul, 85016565ul, 1427530695ul, 1100533073ul };
+
+  for ( ii=0; ii< (sizeof(fixPatt) / sizeof(fixPatt[0])); ii++ ) {
+    check_fixed_pattern( fixPatt[ii] );
+
+    bool inputSer=false;
+    while ( Serial.available() ) {
+      Serial.read();
+      inputSer=true;
+    }
+    if ( inputSer ) {
+      if (bTimer) {
+        tTimer.end();
+        Serial.printf("\n\tintervalTimer OFF\n\n");
+        bTimer = false;
+      }
+      else {
+        Serial.printf("\n\tintervalTimer ON\n\n");
+        tTimer.begin(tmr_callback, 10);  // us
+        bTimer = true;
+      }
+    }
+  }
+  Serial.printf("\t%u FIXED Pattern\n", ii);
+
+  for ( ii=0; ii< (sizeof(lfsrPatt) / sizeof(lfsrPatt[0])); ii++ ) {
+    check_lfsr_pattern( lfsrPatt[ii] );
+
+    bool inputSer=false;
+    while ( Serial.available() ) {
+      Serial.read();
+      inputSer=true;
+    }
+    if ( inputSer ) {
+      if (bTimer) {
+        tTimer.end();
+        Serial.printf("\n\tintervalTimer OFF\n\n");
+        bTimer = false;
+      }
+      else {
+        Serial.printf("\n\tintervalTimer ON\n\n");
+        tTimer.begin(tmr_callback, 10);  // us
+        bTimer = true;
+      }
+    }
+  }
+  Serial.printf("\t%u PsudoRand Seeds\n", ii);
+
+
   msec = 0;
   int tstMBp=0;
   int rdMSp=0;
@@ -145,41 +176,54 @@ void doTests() {
   int tstMBr=0;
   int rdMSr=0;
   int wrMSr=0;
+
+  memory_ok = true;
   for ( int ii = 0; ii < 100; ii++ ) {
     if ( 1 == testMsec[ii][vTp] ) {
-      Serial.printf("test Pattern %08X Write %u us Read/Test %u us \n", testMsec[ii][vPt], testMsec[ii][vWr], testMsec[ii][vRd] );
+      Serial.printf("test Pattern %08X Write %u us Read/Test %u us Read Cnt %u\n", testMsec[ii][vPt], testMsec[ii][vWr], testMsec[ii][vRd], testMsec[ii][vCt] );
       msec += testMsec[ii][vRd] + testMsec[ii][vWr];
       tstMBp +=2;
       rdMSp += testMsec[ii][vRd];
       wrMSp += testMsec[ii][vWr];
+      if ( testMsec[ii][vFl] != 0 ) {
+        Serial.printf("\t\ttest FAIL : Fixed Pattern %u Read Cnt %u Fail Cnt %u\n", testMsec[ii][vPt], testMsec[ii][vCt], testMsec[ii][vFl] );
+        memory_ok = false;
+      }
     }
   }
   for ( int ii = 0; ii < 100; ii++ ) {
     if ( 2 == testMsec[ii][vTp] ) {
-      Serial.printf("test RndSeed %u Write %u us Read/Test %u us \n", testMsec[ii][vPt], testMsec[ii][vWr], testMsec[ii][vRd] );
+      Serial.printf("test RndSeed %u Write %u us Read/Test %u us Read Cnt %u\n", testMsec[ii][vPt], testMsec[ii][vWr], testMsec[ii][vRd], testMsec[ii][vCt] );
       msec += testMsec[ii][vRd] + testMsec[ii][vWr];
       tstMBr +=2;
       rdMSr += testMsec[ii][vRd];
       wrMSr += testMsec[ii][vWr];
+      if ( testMsec[ii][vFl] != 0 ) {
+      Serial.printf("\t\ttest FAIL : Peusdo Random Seed %08X Read Cnt %u Fail Cnt %u\n", testMsec[ii][vPt], testMsec[ii][vCt], testMsec[ii][vFl] );
+      memory_ok = false;
+      }
     }
   }
   for ( int ii = 0; ii < 100; ii++ ) {
     if ( 5 == testMsec[ii][vTp] ) {
-      Serial.printf("test RndSeed HalfCopy %u Write %u us Read/Test %u us \n", testMsec[ii][vPt], testMsec[ii][vWr], testMsec[ii][vRd] );
+      Serial.printf("test RndSeed HalfCopy %u Write %u us Read/Test %u us Read Cnt %u\n", testMsec[ii][vPt], testMsec[ii][vWr], testMsec[ii][vRd], testMsec[ii][vCt] );
       msec += testMsec[ii][vRd] + testMsec[ii][vWr];
       tstMBr +=2;
       rdMSr += testMsec[ii][vRd];
       wrMSr += testMsec[ii][vWr];
+      if ( testMsec[ii][vFl] != 0 ) {
+        Serial.printf("\t\ttest FAIL : Peusdo Random Seed %08X Read Cnt %u Fail Cnt %u\n", testMsec[ii][vPt], testMsec[ii][vCt], testMsec[ii][vFl] );
+        memory_ok = false;
+      }
     }
   }
-  memory_ok = true;
   for ( int ii = 0; ii < 100; ii++ ) {
     if ( 3 == testMsec[ii][vTp] ) {
-      Serial.printf("\t\ttest FAIL : Fixed Pattern %u  \n", testMsec[ii][vPt] );
+      Serial.printf("\t\ttest FAIL : Fixed Pattern %u Read Cnt %u Fail Cnt %u\n", testMsec[ii][vPt], testMsec[ii][vCt], testMsec[ii][vFl] );
       memory_ok = false;
     }
     if ( 4 == testMsec[ii][vTp] ) {
-      Serial.printf("\t\ttest FAIL : Peusdo Random Seed %08X  \n", testMsec[ii][vPt] );
+      Serial.printf("\t\ttest FAIL : Peusdo Random Seed %08X Read Cnt %u Fail Cnt %u\n", testMsec[ii][vPt], testMsec[ii][vCt], testMsec[ii][vFl] );
       memory_ok = false;
     }
   }
@@ -191,7 +235,7 @@ void doTests() {
   Serial.printf("PsuedoRnd Patt Write ran for %.2f and Read/Test %.2f secs\n", (float)wrMSr / 1000000.0f , (float)rdMSr / 1000000.0f);
   Serial.printf("PsuedoRnd Patt Test %.2f MB per sec\n", (float) (size*tstMBr) / ((float)(wrMSr + rdMSr) / 1000000.0f));
   if (memory_ok)
-    Serial.printf("All memory tests passed :-)\n");
+    Serial.printf("All memory tests passed :-) (readRepeat %u)\n", readRepeat);
 }
 
 bool fail_message(volatile uint32_t *location, uint32_t actual, uint32_t expected)
@@ -207,6 +251,8 @@ bool check_fixed_pattern(uint32_t pattern)
   volatile uint32_t *p;
 
   testMsec[tt][vTp] = 3;
+  testMsec[tt][vCt] = 0;
+  testMsec[tt][vFl] = 0;
   testMsec[tt][vPt] = pattern;
   Serial.printf("testing with fixed pattern %08X\t", pattern);
   testMsec[tt][vWr] = micros();
@@ -221,13 +267,21 @@ bool check_fixed_pattern(uint32_t pattern)
     for (p = memory_begin; p < memory_end; p++) {
       uint32_t actual = *p;
       if (actual != pattern) {
-        tt++;
-        Serial.println();
-        return fail_message(p, actual, pattern);
+        if ( testMsec[tt][vFl] == 0 ) Serial.println();
+        fail_message(p, actual, pattern);
+        testMsec[tt][vFl]++;
+        if ( testMsec[tt][vFl] > ERR_ABORT ) {
+          Serial.printf("\t\tAborting after %u errors\n", testMsec[tt][vFl]);
+          testMsec[tt][vTp] = 1;
+          testMsec[tt][vRd] = micros() - testMsec[tt][vRd];
+          tt++;
+          return false;
+        }
       }
     }
     testMsec[tt][vRd] = micros() - testMsec[tt][vRd];
-    if ( readRepeat > 1 ) Serial.print('.');
+    testMsec[tt][vCt]++;
+    if ( readRepeat > 1 && !(ii%(1+(readRepeat/60) )) ) Serial.print('.');
   }
   testMsec[tt][vTp] = 1;
   tt++;
@@ -235,14 +289,24 @@ bool check_fixed_pattern(uint32_t pattern)
   return true;
 }
 
+//#define vRd 0 // read time
+//#define vWr 1 // write time
+//#define vPt 2 // Pattern/Seed
+//#define vTp 3 // 0=unused, 1=success fixed, 2=succ PRandom, 3=fail fixed, 4=fail=PRandom, 5=succ PRand HalfCopy
+//#define vCt 4 // Read Cnt
+//#define vFl 5 // Fail Cnt
+
+
 // fill the entire RAM with a pseudo-random sequence, then check it
-bool check_lfsr_patternXX(uint32_t seed)
+bool check_lfsr_patternPJRC(uint32_t seed)
 {
   volatile uint32_t *p;
   uint32_t reg;
 
   testMsec[tt][vTp] = 4;
   testMsec[tt][vPt] = seed;
+  testMsec[tt][vCt] = 0;
+  testMsec[tt][vFl] = 0;
   Serial.printf("testing with pseudo-random sequence, seed=%u\t", seed);
   reg = seed;
   testMsec[tt][vWr] = micros();
@@ -267,9 +331,16 @@ bool check_lfsr_patternXX(uint32_t seed)
     for (p = memory_begin; p < memory_end; p++) {
       uint32_t actual = *p;
       if (actual != reg) {
-        tt++;
-        Serial.println();
-        return fail_message(p, actual, reg);
+        if ( testMsec[tt][vFl] == 0 ) Serial.println();
+        fail_message(p, actual, reg);
+        testMsec[tt][vFl]++;
+        if ( testMsec[tt][vFl] > ERR_ABORT ) {
+          Serial.printf("\t\tAborting after %u errors\n", testMsec[tt][vFl]);
+          testMsec[tt][vTp] = 2;
+          testMsec[tt][vRd] = micros() - testMsec[tt][vRd];
+          tt++;
+          return false;
+        }
       }
       //Serial.printf(" reg=%08X\n", reg);
       for (int i = 0; i < 3; i++) {
@@ -282,7 +353,8 @@ bool check_lfsr_patternXX(uint32_t seed)
       }
     }
     testMsec[tt][vRd] = micros() - testMsec[tt][vRd];
-    if ( readRepeat > 1 ) Serial.print('.');
+    testMsec[tt][vCt]++;
+    if ( readRepeat > 1 && !(ii%(1+(readRepeat/60) )) ) Serial.print('.');
   }
   testMsec[tt][vTp] = 2;
   tt++;
@@ -341,6 +413,8 @@ bool check_lfsr_pattern(uint32_t seed)
 
   testMsec[tt][vTp] = 4;
   testMsec[tt][vPt] = seed;
+  testMsec[tt][vCt] = 0;
+  testMsec[tt][vFl] = 0;
   Serial.printf("testing with pseudo-random sequence HalfCopy %d, seed=%u\t", idxHalfCopy, seed );
   reg = seed;
   testMsec[tt][vWr] = micros();
@@ -381,9 +455,16 @@ bool check_lfsr_pattern(uint32_t seed)
     for (p = memory_mid; p < memory_end; p++) {
       uint32_t actual = *p;
       if (actual != reg) {
-        tt++;
-        Serial.println();
-        return fail_message(p, actual, reg);
+        if ( testMsec[tt][vFl] == 0 ) Serial.println();
+        fail_message(p, actual, reg);
+        testMsec[tt][vFl]++;
+        if ( testMsec[tt][vFl] > ERR_ABORT ) {
+          Serial.printf("\t\tAborting after %u errors\n", testMsec[tt][vFl]);
+          testMsec[tt][vTp] = 5;
+          testMsec[tt][vRd] = micros() - testMsec[tt][vRd];
+          tt++;
+          return false;
+        }
       }
       //Serial.printf(" reg=%08X\n", reg);
       for (int i = 0; i < 3; i++) {
@@ -396,7 +477,8 @@ bool check_lfsr_pattern(uint32_t seed)
       }
     }
     testMsec[tt][vRd] = micros() - testMsec[tt][vRd];
-    if ( readRepeat > 1 ) Serial.print('.');
+    testMsec[tt][vCt]++;
+    if ( readRepeat > 1 && !(ii%(1+(readRepeat/60) )) ) Serial.print('.');
   }
   testMsec[tt][vTp] = 5;
   tt++;
