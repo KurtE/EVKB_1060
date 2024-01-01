@@ -5,20 +5,58 @@ SDRAM_t4 sdram;
 #define XFERSIZE 2064
 #define XFEREACH 2001
 
+// EasyTransfer ???
+#define SPD 2000000
+HardwareSerial *psAll[8] = { &Serial1, &Serial2, &Serial3, &Serial4, &Serial5, &Serial6, &Serial7, &Serial7 };
+void XXXsetup() {
+ pinMode(13, OUTPUT);
+  for ( int ii = 0; ii < 7; ii++ ) {
+    psAll[ii]->begin(SPD);
+  }
+}
+char buffer[80];
+
+void serialXfer(HardwareSerial * psIn, HardwareSerial * psOut, bool bWrite, uint32_t ii)
+{
+int whoami = 2;
+char chWho = 'z';
+  
+  uint32_t cb = psIn->available();
+  buffer[0] = 0; // NULL buffer when nothing read !!!
+  if (cb) {
+    if ( 0 != whoami ) Serial.print( cb ); // bugbug debug
+    if (cb > sizeof(buffer)) cb = sizeof(buffer);
+    if (cb >  (uint32_t)psOut->availableForWrite()) cb = (uint32_t)psOut->availableForWrite();
+    if ( 0 == psIn->readBytes(buffer, cb) ) {
+      Serial.printf( "Read Error on %u - expected %u Bytes" , ii, cb );
+      buffer[0] = 0; // NULL buffer when nothing read !!!
+    }
+    else if ( bWrite ) {
+      psOut->print((char)( chWho + ii));
+      psOut->write(buffer, cb);
+    }
+  }
+  if ( 0 == whoami ) // bugbug debug // FORCE OUTPUT
+    psOut->print((char)( chWho + ii));  // bugbug debug
+}
+
 #if 0 // DTCM buffers
+char Where[]="not SDRAM";
 // 2 Here TWO L/s=532 B/s=1106028 @XFEREACH 1000
 // 2 Here TWO L/s=270 B/s=1101060 @XFEREACH 2000
-char buf1t[BUFFSIZE];
-char buf1r[BUFFSIZE];
-char buf2t[BUFFSIZE];
-char buf2r[BUFFSIZE];
-char xfer[XFERSIZE + 10];
-char xferCMP[XFERSIZE + 10];
-char xbuff1[XFERSIZE];
-char xbuff2[XFERSIZE];
+#define DMA_RAM DMAMEM // comment for DTCM
+DMA_RAM char buf1t[BUFFSIZE];
+DMA_RAM char buf1r[BUFFSIZE];
+DMA_RAM char buf2t[BUFFSIZE];
+DMA_RAM char buf2r[BUFFSIZE];
+DMA_RAM char xfer[XFERSIZE + 10];
+DMA_RAM char xferCMP[XFERSIZE + 10];
+DMA_RAM char xbuff1[XFERSIZE];
+DMA_RAM char xbuff2[XFERSIZE];
 #else // direct address
 // Opps @221 MHz : 1 Here ONE 58368 xb B[2032 2050] xb ERR[198 360]
 // 2 Here TWO L/s=269 B/s=1096982
+char Where[]="IN SDRAM";
 char *buf1t = (char *)(0x80004000); // [BUFFSIZE];
 char *buf1r = (char *)(0x80008000); // [BUFFSIZE];
 char *buf2t = (char *)(0x8000C000); // [BUFFSIZE];
@@ -96,7 +134,7 @@ void loop() {
   Serial.println();
   digitalToggleFast( LED_BUILTIN );
   Serial1.printf( "\n1 Here ONE %u\txb B[%u %u] xb ERR[%u %u]\n", millis(), xb1, xb2, xb1ERR, xb2ERR );
-  Serial2.printf( "\n2 Here TWO L/s=%u B/s=%u\n", cntLpL, cntByL );
+  Serial2.printf( "\n2 Here TWO L/s=%u B/s=%u MEM=%s\n", cntLpL, cntByL, Where );
   Serial1.write( xfer, XFEREACH );
   Serial2.write( xfer, XFEREACH );
 }
