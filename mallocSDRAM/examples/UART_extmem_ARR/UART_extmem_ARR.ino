@@ -1,5 +1,3 @@
-#include "SDRAM_t4.h"
-SDRAM_t4 sdram;
 
 #define BUFFSIZE 20480 // #1: 2048  #2: 20480
 #define XFERSIZE 20640 // #1: 2064  #2: 20640
@@ -42,10 +40,6 @@ void setup() {
   }
   xfer = (char *)sdram_malloc(24*1024);
   xferCMP = (char *)sdram_malloc(24*1024);
-  if (sdram.init()) 
-  {
-    Serial.print( "\n\tSUCCESS sdram.init()\n");
-  }
   Serial.printf("Compile Time:: " __FILE__ " " __DATE__ " " __TIME__ "\n");
   for ( int ii = 0; ii < USED_UARTS; ii++ ) {
     psAll[ii]->begin(SPD);
