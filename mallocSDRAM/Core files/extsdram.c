@@ -5,12 +5,8 @@
 #include "smalloc.h"
 #include "wiring.h"
 
-#ifdef extSDRAM
-extern unsigned long _extsdram_start;
-extern unsigned long _extsdram_end;
-
-
 #if defined(ARDUINO_TEENSY_MICROMOD)
+
 // Teensy Micromod external RAM address range is 0x80000000 to 0x8FFFFFFF
 #define HAS_SDRAM
 #define IS_SDRAM(addr) (((uint32_t)addr >> 28) == 8)
@@ -56,5 +52,3 @@ void *sdram_realloc(void *ptr, size_t size)
 #endif
     return realloc(ptr, size);
 }
-
-#endif

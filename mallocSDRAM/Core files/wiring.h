@@ -37,7 +37,7 @@
 #include "binary.h"
 #include "core_id.h"
 #include "core_pins.h"
-#include "hasSDRAMKludge.h"
+//#include "hasSDRAMKludge.h"
 
 // type_traits interferes with min() and other defines
 // include it early, so we can define these later
@@ -231,12 +231,12 @@ void *extmem_calloc(size_t nmemb, size_t size);
 void *extmem_realloc(void *ptr, size_t size);
 
 //kludge for SDRAM
-#ifdef extSDRAM
+//#ifdef extSDRAM
 void *sdram_malloc(size_t size);
 void sdram_free(void *ptr);
 void *sdram_calloc(size_t nmemb, size_t size);
 void *sdram_realloc(void *ptr, size_t size);
-#endif
+//#endif
 
 #ifdef __cplusplus
 } // extern "C"

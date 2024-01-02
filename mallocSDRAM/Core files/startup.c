@@ -6,8 +6,6 @@
 #include <string.h>
 #include "debug/printf.h"
 
-#include "hasSDRAMKludge.h"
-
 // from the linker
 extern unsigned long _stextload;
 extern unsigned long _stext;
@@ -21,11 +19,8 @@ extern unsigned long _flexram_bank_config;
 extern unsigned long _estack;
 extern unsigned long _extram_start;
 extern unsigned long _extram_end;
-
-#ifdef extSDRAM
 extern unsigned long _extsdram_start;
 extern unsigned long _extsdram_end;
-#endif
 
 __attribute__ ((used, aligned(1024), section(".vectorsram")))
 void (* volatile _VectorsRam[NVIC_NUM_INTERRUPTS+16])(void);
@@ -54,8 +49,8 @@ uint8_t external_psram_size = 0;
 struct smalloc_pool extmem_smalloc_pool;
 #endif
 //Kludge to test sdram
-#ifdef extSDRAM
-uint8_t external_sdram_size = 32;
+uint8_t external_sdram_size = 0;
+#if defined(ARDUINO_TEENSY_MICROMOD)
 struct smalloc_pool extsdram_smalloc_pool;
 #endif
 
@@ -193,20 +188,44 @@ static void ResetHandler2(void)
 	configure_external_ram();
 #endif
 //kludge for sdram
-#ifdef extSDRAM
+#if defined(ARDUINO_TEENSY_MICROMOD)
     if(!sdram_init()) {
-	IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_03 = 5;
-	IOMUXC_SW_PAD_CTL_PAD_GPIO_B0_03 = IOMUXC_PAD_DSE(7);
-	IOMUXC_GPR_GPR27 = 0xFFFFFFFF;
-	GPIO7_GDIR |= (1<<3);
-	GPIO7_DR_SET = (1<<3); // digitalWrite(13, HIGH);
+        //IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_03 = 5;
+        ////IOMUXC_SW_PAD_CTL_PAD_GPIO_B0_03 = IOMUXC_PAD_DSE(7);
+        //IOMUXC_GPR_GPR27 = 0xFFFFFFFF;
+        //GPIO7_GDIR |= (1<<3);
+        //GPIO7_DR_SET = (1<<3); // digitalWrite(13, HIGH);
+        memset(&extsdram_smalloc_pool, 0, sizeof(extsdram_smalloc_pool));
+    } else {
+        external_sdram_size = 32;
+        // TODO: zero uninitialized EXTMEM variables
+        // TODO: copy from flash to initialize EXTMEM variables
+        sm_set_pool(&extsdram_smalloc_pool, &_extsdram_end,
+            external_sdram_size * 0x100000 -
+            ((uint32_t)&_extsdram_end - (uint32_t)&_extsdram_start),
+            1, NULL);
     }
-    // TODO: zero uninitialized EXTMEM variables
-    // TODO: copy from flash to initialize EXTMEM variables
-    sm_set_pool(&extsdram_smalloc_pool, &_extsdram_end,
-        external_sdram_size * 0x100000 -
-        ((uint32_t)&_extsdram_end - (uint32_t)&_extsdram_start),
-        1, NULL);
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
 #endif
 	analog_init();
 	pwm_init();
@@ -350,9 +369,10 @@ FLASHMEM void configure_cache(void)
 	SCB_MPU_RBAR = 0x80000000 | REGION(i++); // SEMC: SDRAM, NAND, SRAM, etc
 	SCB_MPU_RASR = MEM_CACHE_WBWA | READWRITE | NOEXEC | SIZE_1G;
 	// SDRAM PCB: https://forum.pjrc.com/index.php?threads/73898/#post-334041
+#if defined(ARDUINO_TEENSY_MICROMOD)
 	SCB_MPU_RBAR = 0x81E00000 | REGION(i++); // SEMC: SDRAM, NAND, SRAM, etc
 	SCB_MPU_RASR = MEM_NOCACHE | READWRITE | NOEXEC | SIZE_2M;
-    
+#endif
 //#endif
 	SCB_MPU_CTRL = SCB_MPU_CTRL_ENABLE;
 

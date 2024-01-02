@@ -24,7 +24,7 @@
 #define __PGMSPACE_H_ 1
 
 #include <inttypes.h>
-#include "hasSDRAMKludge.h"
+//#include "hasSDRAMKludge.h"
 
 #define DMAMEM __attribute__ ((section(".dmabuffers"), used))
 #define FASTRUN __attribute__ ((section(".fastrun") ))
@@ -32,12 +32,8 @@
 #define FLASHMEM __attribute__((section(".flashmem")))
 
 //klude for sdram
-#ifdef extSDRAM
 #define EXTSDMEM __attribute__((section(".externalsdram")))
-#else
 #define EXTMEM __attribute__((section(".externalram")))
-#endif
-
 
 #define PGM_P  const char *
 #define PSTR(str) ({static const char data[] PROGMEM = (str); &data[0];})

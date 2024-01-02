@@ -26,7 +26,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "hasSDRAMKludge.h"
+//#include "hasSDRAMKludge.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,7 +52,7 @@ extern struct smalloc_pool extmem_smalloc_pool;
 #endif
 
 //kludge for sdram
-#ifdef extSDRAM
+#if defined(ARDUINO_TEENSY_MICROMOD)
 extern struct smalloc_pool extsdram_smalloc_pool;
 #endif
 
