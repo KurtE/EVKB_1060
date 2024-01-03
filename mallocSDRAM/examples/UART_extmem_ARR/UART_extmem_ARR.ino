@@ -1,12 +1,13 @@
 
+#define DB_SERIAL_CNT 5
+#define USED_UARTS 4
+// #define USERAM_DTCM 1
+
 #define BUFFSIZE 20480 // #1: 2048  #2: 20480
 #define XFERSIZE 20640 // #1: 2064  #2: 20640
 #define XFEREACH 20001 // #1: 2001  #2: 20001
-
-// EasyTransfer ???
 #define SPD 6000000 // FASTER 20Mbaud? : https://forum.pjrc.com/index.php?threads/teensy4-1-max-baud-rate.67150/
-#define DB_SERIAL_CNT 5
-#define USED_UARTS 4
+
 HardwareSerialIMXRT *psAll[DB_SERIAL_CNT] = { &Serial1, &Serial2, &Serial4, &Serial6, &Serial5 };
 char SerNames[DB_SERIAL_CNT][16] = { "Serial1", "Serial2", "Serial4", "Serial6", "Serial5" };
 /*    Serial1.begin(6000000); // 2 & 0
@@ -20,7 +21,6 @@ enum idxBA { iTX = 0, iRX, iXF }; // index Buffer Array Tx, Rx, XFer
 #define iRX 1
 #define iXF 2
 
-// #define USERAM_DTCM 1
 #if USERAM_DTCM // DTCM or DMAMEM buffers
 char Where[] = "malloc DMAMEM";
 // 2 Here TWO L/s=532 B/s=1106028 @XFEREACH 1000
