@@ -281,7 +281,7 @@ bool sdram_init(void)
     SEMC_MCR &= ~SEMC_MCR_MDIS;
 
     // configure SDRAM parameters
-    SEMC_BR0 = 0x80000000 | SEMC_BR_MS(13 /*13 = 32 Mbyte*/) | SEMC_BR_VLD;
+    SEMC_BR0 = 0x90000000 | SEMC_BR_MS(13 /*13 = 32 Mbyte*/) | SEMC_BR_VLD;
     SEMC_SDRAMCR0 = SEMC_SDRAMCR0_CL(3) |
         SEMC_SDRAMCR0_COL(3) |  // 3 = 9 bit column
         SEMC_SDRAMCR0_BL(3) |   // 3 = 8 word burst length
