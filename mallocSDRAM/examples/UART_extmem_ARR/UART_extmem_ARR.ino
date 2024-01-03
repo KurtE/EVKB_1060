@@ -6,9 +6,14 @@
 // EasyTransfer ???
 #define SPD 6000000 // FASTER 20Mbaud? : https://forum.pjrc.com/index.php?threads/teensy4-1-max-baud-rate.67150/
 #define DB_SERIAL_CNT 5
-#define USED_UARTS 2
-HardwareSerialIMXRT *psAll[DB_SERIAL_CNT] = { &Serial1, &Serial2, &Serial4, &Serial5, &Serial6 };
-
+#define USED_UARTS 4
+HardwareSerialIMXRT *psAll[DB_SERIAL_CNT] = { &Serial1, &Serial2, &Serial4, &Serial6, &Serial5 };
+char SerNames[DB_SERIAL_CNT][16] = { "Serial1", "Serial2", "Serial4", "Serial6", "Serial5" };
+/*    Serial1.begin(6000000); // 2 & 0
+      Serial2.begin(6000000); // 17 & 18
+      Serial6.begin(6000000); // p# 24 Tx & 25 Rx
+      Serial5.begin(6000000); // p# 20 Tx & 21 Rx
+      Serial4.begin(6000000); // p# B1_00 Tx & B1_01 Rx*/
 char *SerBArr[DB_SERIAL_CNT][3];
 enum idxBA { iTX = 0, iRX, iXF }; // index Buffer Array Tx, Rx, XFer
 #define iTX 0
@@ -34,12 +39,12 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   // if ( CrashReport ) Serial.print( CrashReport );
   for ( uint32_t ii = 0; ii < USED_UARTS; ii++ ) {
-    SerBArr[ii][iTX] = (char *)sdram_malloc(24*1024);
-    SerBArr[ii][iRX] = (char *)sdram_malloc(24*1024);
-    SerBArr[ii][iXF] = (char *)sdram_malloc(24*1024);
+    SerBArr[ii][iTX] = (char *)sdram_malloc(24 * 1024);
+    SerBArr[ii][iRX] = (char *)sdram_malloc(24 * 1024);
+    SerBArr[ii][iXF] = (char *)sdram_malloc(24 * 1024);
   }
-  xfer = (char *)sdram_malloc(24*1024);
-  xferCMP = (char *)sdram_malloc(24*1024);
+  xfer = (char *)sdram_malloc(24 * 1024);
+  xferCMP = (char *)sdram_malloc(24 * 1024);
   Serial.printf("Compile Time:: " __FILE__ " " __DATE__ " " __TIME__ "\n");
   for ( int ii = 0; ii < USED_UARTS; ii++ ) {
     psAll[ii]->begin(SPD);
@@ -48,7 +53,7 @@ void setup() {
     psAll[ii]->addMemoryForWrite(SerBArr[ii][iTX], BUFFSIZE);
     psAll[ii]->addMemoryForRead(SerBArr[ii][iRX], BUFFSIZE);
   }
-  int ii; // Prep Xfer buffer and copy to Compare buffer  
+  int ii; // Prep Xfer buffer and copy to Compare buffer
   for ( ii = 0; ii < XFERSIZE; ii++ ) xfer[ii] = (ii % 91) + 33;
   for ( ; ii < XFERSIZE; ii++ ) xfer[ii] = (ii % 91) + 32;
   for ( ii = 90; ii < XFERSIZE; ii += 91 ) xfer[ii] = '\n';
@@ -61,29 +66,24 @@ uint32_t cntLpL = 0;
 uint32_t cntBy = 0;
 uint32_t cntByL = 0;
 elapsedMillis aTime;
-static int xb[USED_UARTS], xb1 = 0, xb2 = 0;
-static int xbERR[USED_UARTS], xb1ERR = 0, xb2ERR = 0;
+static int xb[USED_UARTS];
+static int xbERR[USED_UARTS];
 
 void loop() {
-  int ii;
-  if ( 0 == xb1 ) {
+  int ii, jj;
+  if ( 0 == xb[0] ) {
     aTime = 0;
   }
   else {
-    for ( ii = 0; SerBArr[0][iXF][ii] != '!' && ii < xb1; ii++ );
-    if ( 0 != memcmp( &SerBArr[0][iXF][ii], xferCMP, xb1 - ii) ) {
-      Serial.print( "\txbuff 1 no cmp!\n");
-      xb1ERR++;
-    }
-    for ( ii = 0; SerBArr[1][iXF][ii] != '!' && ii < xb2; ii++ );
-    if ( 0 != memcmp( &SerBArr[1][iXF][ii], xferCMP, xb2 - ii) ) {
-      Serial.print( "\txbuff 2 no cmp!\n");
-      xb2ERR++;
+    for ( jj = 0; jj < USED_UARTS; jj++ ) {
+      for ( ii = 0; SerBArr[jj][iXF][ii] != '!' && ii < xb[jj]; ii++ );
+      if ( 0 != memcmp( &SerBArr[jj][iXF][ii], xferCMP, xb[jj] - ii) ) {
+        xbERR[jj]++;
+        Serial.printf( "\txbuff idx=%u no cmp! : %s Err#:%u #Rx:%u #Av:%u\n", jj, SerNames[jj], xbERR[jj], xb[jj], psAll[jj]->available());
+      }
     }
   }
-  xb1 = 0;
-  xb2 = 0;
-  for ( ii=0; ii<USED_UARTS; ii++ ) xb[ii]=0;
+  for ( ii = 0; ii < USED_UARTS; ii++ ) xb[ii] = 0;
   cntLp++;
   if ( aTime >= 1000 ) {
     cntLpL = cntLp;
@@ -92,32 +92,26 @@ void loop() {
     cntBy = 0;
     aTime -= 1000;
   }
-  int ab1 = 0, ab2 = 0;
-  int aib[USED_UARTS];
-  for ( ii=0; ii<USED_UARTS; ii++ ) aib[ii]=0;
-  while ( psAll[0]->available() || psAll[1]->available()) {
-    ab1 = psAll[0]->available();
-    ab2 = psAll[1]->available();
-    if ( ab1 != 0 ) xb1 += psAll[0]->readBytes( &SerBArr[0][iXF][xb1], ab1 );
-    if ( ab2 != 0 ) xb2 += psAll[1]->readBytes( &SerBArr[1][iXF][xb2], ab2 );
+  int ab[USED_UARTS];
+  for ( ii = 0; ii < USED_UARTS; ii++ ) ab[ii] = 0;
+  int allCnt;
+  do {
+    allCnt = 0;
+    for ( ii = 0; ii < USED_UARTS; ii++ )
+      allCnt += ab[ii] = psAll[ii]->available();
+    for ( ii = 0; ii < USED_UARTS; ii++ )
+      if ( ab[ii] != 0 ) xb[ii] += psAll[ii]->readBytes( &SerBArr[ii][iXF][xb[ii]], ab[ii] );
     delayMicroseconds(15);
+  } while ( 0 != allCnt);
+  for ( ii = 0; ii < USED_UARTS; ii++ ) {
+    SerBArr[ii][iXF][xb[ii]] = 0;
+    cntBy += xb[ii];
+    Serial.printf( "\n%.200s", SerBArr[ii][iXF] );
   }
-  SerBArr[0][iXF][xb1] = 0;
-  SerBArr[1][iXF][xb2] = 0;
-  char kk1,kk2;
-  kk1 = SerBArr[0][iXF][xb1/20];
-  kk2 = SerBArr[1][iXF][xb2/20];
-  SerBArr[0][iXF][xb1/20] = 0;
-  SerBArr[1][iXF][xb2/20] = 0;
-  cntBy += xb1 + xb2;
-  Serial.printf( "\n%.200s", SerBArr[0][iXF] );
-  Serial.printf( "\n%.200s", SerBArr[1][iXF] );
   Serial.println();
   digitalToggleFast( LED_BUILTIN );
-  Serial1.printf( "\n1 Here ONE %u\txb B[%u %u] xb ERR[%u %u]\n", millis(), xb1, xb2, xb1ERR, xb2ERR );
-  Serial2.printf( "\n2 Here TWO L/s=%u B/s=%u MEM=%s\n", cntLpL, cntByL, Where );
-  SerBArr[0][iXF][xb1/20] = kk1;
-  SerBArr[1][iXF][xb2/20] = kk2;
-  Serial1.write( xfer, XFEREACH );
-  Serial2.write( xfer, XFEREACH );
+  for ( ii = 0; ii < USED_UARTS; ii++ ) {
+    psAll[ii]->printf( "\n%s Here %u\t #B:%u #ERR:%u /s=%u B/s=%u MEM=%s\n", SerNames[ii], millis(), xb[ii], xbERR[ii], cntLpL, cntByL, Where );
+    psAll[ii]->write( xfer, XFEREACH );
+  }
 }
