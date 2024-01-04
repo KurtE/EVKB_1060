@@ -121,7 +121,7 @@ void loop() {
   for ( ii = 0; ii < USED_UARTS; ii++ ) {
     SerBArr[ii][iXF][xb[ii]] = 0;
     cntBy += xb[ii];
-    Serial.printf( "\n%.200s", SerBArr[ii][iXF] );
+    Serial.printf( "\n%.150s", SerBArr[ii][iXF] );
   }
   for ( ii = 0; ii < USED_UARTS; ii++ ) {
     psAll[ii]->printf( "\n%s Here %u\t #B:%u #ERR:%u /s=%u B/s=%u MEM=%s\n", SerNames[ii], millis(), xb[ii], xbERR[ii], cntLpL, cntByL, Where );
