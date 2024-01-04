@@ -226,7 +226,7 @@ bool sdram_init(void)
     // 5 = 133mhz
     // 4 = 166mhz - SDRAM rated,  see post #60
     // 3 = 221mhz
-    const unsigned int clockdiv = 5;
+    const unsigned int clockdiv = 4;
 
     CCM_CBCDR = (CCM_CBCDR & ~(CCM_CBCDR_SEMC_PODF(7))) |
         CCM_CBCDR_SEMC_CLK_SEL | CCM_CBCDR_SEMC_ALT_CLK_SEL |
@@ -265,11 +265,11 @@ bool sdram_init(void)
 
     configure_sdram_pins();
 
-    #if NOCAP
-	SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F) | SEMC_MCR_DQSMD;
-    #else  // enable SEMC_MCR_DQSMD (EMC_39
+    //#if NOCAP
+	//SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F) | SEMC_MCR_DQSMD;
+    //#else  // enable SEMC_MCR_DQSMD (EMC_39
 	SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F);
-    #endif
+    //#endif
 
     // TODO: reference manual page 1364 says "Recommend to set BMCR0 with 0x0 for
     // applications that require restrict sequence of transactions", same on BMCR1
@@ -351,5 +351,5 @@ bool sdram_init(void)
     SEMC_SDRAMCR3 |= SEMC_SDRAMCR3_REN;
 
     if(result_cmd == false) return false;
-    return true; // hopefully SDRAM now working at 90000000 to 81FFFFFF
+    return true; // hopefully SDRAM now working at 80000000 to 81FFFFFF
 }
