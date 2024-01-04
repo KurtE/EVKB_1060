@@ -1,8 +1,11 @@
+#define SDRAM_T4_HACK 1
+#ifdef SDRAM_T4_HACK
 #include "SDRAM_t4.h"
 SDRAM_t4 sdram;
+#endif
 
 #define DB_SERIAL_CNT 5
-#define USED_UARTS 5
+#define USED_UARTS 5 // Set to number UARTS to test from psAll[] below
 // #define USERAM_DTCM 1
 #define SPD 5000000 // FASTER 20Mbaud? : https://forum.pjrc.com/index.php?threads/teensy4-1-max-baud-rate.67150/
 
@@ -17,11 +20,8 @@ char SerNames[DB_SERIAL_CNT][16] = { "Serial1", "Serial2", "Serial3", "Serial4",
 HardwareSerialIMXRT *psAll[DB_SERIAL_CNT] = { &Serial1, &Serial2, &Serial4, &Serial6, &Serial5 };
 char SerNames[DB_SERIAL_CNT][16] = { "Serial1", "Serial2", "Serial4", "Serial6", "Serial5" };
 #endif
-/*    Serial1.begin(6000000); // 2 & 0
-      Serial2.begin(6000000); // 17 & 18
-      Serial6.begin(6000000); // p# 24 Tx & 25 Rx
-      Serial5.begin(6000000); // p# 20 Tx & 21 Rx
-      Serial4.begin(6000000); // p# B1_00 Tx & B1_01 Rx*/
+//    Serial1// 2 & 0 :: Serial2// 17 & 18 :: Serial6// p# 24 Tx & 25 Rx
+//      Serial5// p# 20 Tx & 21 Rx :: Serial4// p# B1_00 Tx & B1_01 Rx
 char *SerBArr[DB_SERIAL_CNT][3];
 enum idxBA { iTX = 0, iRX, iXF }; // index Buffer Array Tx, Rx, XFer
 #define iTX 0
@@ -30,16 +30,11 @@ enum idxBA { iTX = 0, iRX, iXF }; // index Buffer Array Tx, Rx, XFer
 
 #if USERAM_DTCM // DTCM or DMAMEM buffers
 char Where[] = "malloc DMAMEM";
-// 2 Here TWO L/s=532 B/s=1106028 @XFEREACH 1000
-// 2 Here TWO L/s=270 B/s=1101060 @XFEREACH 2000
-#define sdram_malloc malloc
 #else // sdram_malloc address SDRAM
-// Opps @221 MHz : 1 Here ONE 58368 xb B[2032 2050] xb ERR[198 360]
-// 2 Here TWO L/s=269 B/s=1096982
 char Where[] = "sdram_malloc";
 #endif
-char *xfer; // = (char *)(0x80000000); // [XFERSIZE + 10];
-char *xferCMP; //  = (char *)(0x80010000); // [XFERSIZE + 10];
+char *xfer; // Outgoing Packet Buffer
+char *xferCMP; // Duplicate data to compare incoming data
 
 uint32_t cntLp = 0;
 uint32_t cntLpL = 0;
@@ -53,8 +48,10 @@ void setup() {
   uint32_t flSDRAM = 0;
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(13, HIGH);
-  if (sdram.init()) Serial.print( "\n\tSUCCESS sdram.init()\n");
   while (!Serial) ; // wait
+#ifdef SDRAM_T4_HACK
+  if (sdram.init()) Serial.print( "\n\tSUCCESS sdram.init()\n");
+#endif
   if ( CrashReport ) Serial.print( CrashReport );
   for ( uint32_t ii = 0; ii < USED_UARTS; ii++ ) {
     for ( uint32_t jj = 0; jj < 3; jj++ ) {
