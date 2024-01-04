@@ -351,5 +351,5 @@ bool sdram_init(void)
     SEMC_SDRAMCR3 |= SEMC_SDRAMCR3_REN;
 
     if(result_cmd == false) return false;
-    return true; // hopefully SDRAM now working at 90000000 to 81FFFFFF
+    return true; // hopefully SDRAM now working at 90000000 to 91FFFFFF
 }
