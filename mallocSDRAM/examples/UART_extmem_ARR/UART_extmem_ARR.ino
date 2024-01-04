@@ -1,3 +1,5 @@
+#include "SDRAM_t4.h"
+SDRAM_t4 sdram;
 
 #define DB_SERIAL_CNT 5
 #define USED_UARTS 5
@@ -39,18 +41,36 @@ char Where[] = "sdram_malloc";
 char *xfer; // = (char *)(0x80000000); // [XFERSIZE + 10];
 char *xferCMP; //  = (char *)(0x80010000); // [XFERSIZE + 10];
 
+uint32_t cntLp = 0;
+uint32_t cntLpL = 0;
+uint32_t cntBy = 0;
+uint32_t cntByL = 0;
+static int xb[USED_UARTS];
+static int xbERR[USED_UARTS];
+elapsedMillis aTime;
+
 void setup() {
-  while (!Serial) ; // wait
+  uint32_t flSDRAM = 0;
   pinMode(LED_BUILTIN, OUTPUT);
-  // if ( CrashReport ) Serial.print( CrashReport );
+  digitalWrite(13, HIGH);
+  if (sdram.init()) Serial.print( "\n\tSUCCESS sdram.init()\n");
+  while (!Serial) ; // wait
+  if ( CrashReport ) Serial.print( CrashReport );
   for ( uint32_t ii = 0; ii < USED_UARTS; ii++ ) {
-    SerBArr[ii][iTX] = (char *)sdram_malloc(24 * 1024);
-    SerBArr[ii][iRX] = (char *)sdram_malloc(24 * 1024);
-    SerBArr[ii][iXF] = (char *)sdram_malloc(24 * 1024);
+    for ( uint32_t jj = 0; jj < 3; jj++ ) {
+      SerBArr[ii][jj] = (char *)sdram_malloc(24 * 1024);
+      if ( 0 == SerBArr[ii][jj] ) flSDRAM++;
+    }
   }
   xfer = (char *)sdram_malloc(24 * 1024);
+  if ( 0 == xfer ) flSDRAM++;
   xferCMP = (char *)sdram_malloc(24 * 1024);
+  if ( 0 == xferCMP ) flSDRAM++;
   Serial.printf("Compile Time:: " __FILE__ " " __DATE__ " " __TIME__ "\n");
+  if ( 0 != flSDRAM ) {
+    Serial.printf("\t%u sdram_malloc FAILS!!\n");
+    while (1);
+  }
   for ( int ii = 0; ii < USED_UARTS; ii++ ) {
     psAll[ii]->begin(SPD);
   }
@@ -64,42 +84,35 @@ void setup() {
   for ( ii = 90; ii < XFERSIZE; ii += 91 ) xfer[ii] = '\n';
   for ( ii = 0; ii < XFERSIZE; ii++) xferCMP[ii] = xfer[ii];
   xfer[XFEREACH] = 0;
+  // FEED the UARTS for First loop()
+  for ( ii = 0; ii < USED_UARTS; ii++ ) {
+    psAll[ii]->printf( "\nSETUP %s Here %u\t #B:%u #ERR:%u /s=%u B/s=%u MEM=%s\n", SerNames[ii], millis(), xb[ii], xbERR[ii], cntLpL, cntByL, Where );
+    psAll[ii]->write( xfer, XFEREACH );
+  }
+  delay(100); // Allow first UART transfers to proceed
+  aTime = 0;
 }
-
-uint32_t cntLp = 0;
-uint32_t cntLpL = 0;
-uint32_t cntBy = 0;
-uint32_t cntByL = 0;
-elapsedMillis aTime;
-static int xb[USED_UARTS];
-static int xbERR[USED_UARTS];
 
 void loop() {
   int ii, jj;
-  if ( 0 == xb[0] ) {
-    aTime = 0;
-  }
-  else {
-    for ( jj = 0; jj < USED_UARTS; jj++ ) {
-      for ( ii = 0; SerBArr[jj][iXF][ii] != '!' && ii < xb[jj]; ii++ );
-      if ( 0 != memcmp( &SerBArr[jj][iXF][ii], xferCMP, xb[jj] - ii) ) {
-        xbERR[jj]++;
-        Serial.printf( "\txbuff idx=%u no cmp! : %s Err#:%u #Rx:%u #Av:%u\n", jj, SerNames[jj], xbERR[jj], xb[jj], psAll[jj]->available());
-      }
+  for ( jj = 0; 0 != cntLp && jj < USED_UARTS; jj++ ) { // Skip first 0 != cntLp, needed var xb[] on ReadBytes follows
+    for ( ii = 0; SerBArr[jj][iXF][ii] != '!' && ii < xb[jj]; ii++ ); // GET ii: Skip 'stats' before packet starting "!"
+    if ( 0 == ii || 0 != memcmp( &SerBArr[jj][iXF][ii], xferCMP, xb[jj] - ii) ) {
+      xbERR[jj]++;
+      Serial.printf( "\txbuff idx=%u no cmp! : %s Err#:%u #Rx:%u #Av:%u\n", jj, SerNames[jj], xbERR[jj], xb[jj], psAll[jj]->available());
     }
   }
   for ( ii = 0; ii < USED_UARTS; ii++ ) xb[ii] = 0;
   cntLp++;
   if ( aTime >= 1000 ) {
     cntLpL = cntLp;
-    cntLp = 0;
     cntByL = cntBy;
-    cntBy = 0;
+    cntLp = cntBy = 0;
     aTime -= 1000;
   }
+  int allCnt;
   int ab[USED_UARTS];
   for ( ii = 0; ii < USED_UARTS; ii++ ) ab[ii] = 0;
-  int allCnt;
   do {
     allCnt = 0;
     for ( ii = 0; ii < USED_UARTS; ii++ )
@@ -113,10 +126,10 @@ void loop() {
     cntBy += xb[ii];
     Serial.printf( "\n%.200s", SerBArr[ii][iXF] );
   }
-  Serial.println();
-  digitalToggleFast( LED_BUILTIN );
   for ( ii = 0; ii < USED_UARTS; ii++ ) {
     psAll[ii]->printf( "\n%s Here %u\t #B:%u #ERR:%u /s=%u B/s=%u MEM=%s\n", SerNames[ii], millis(), xb[ii], xbERR[ii], cntLpL, cntByL, Where );
     psAll[ii]->write( xfer, XFEREACH );
   }
+  Serial.println("\n\t ------------------------------");
+  digitalToggleFast( LED_BUILTIN );
 }
