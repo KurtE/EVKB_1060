@@ -97,6 +97,7 @@ void loop() {
     cntByL = cntBy;
     cntLp = cntBy = 0;
     aTime -= 1000;
+    digitalToggleFast( LED_BUILTIN );
   }
   int allCnt;
   int ab[USED_UARTS];
@@ -119,5 +120,4 @@ void loop() {
     psAll[ii]->write( xfer, XFEREACH );
   }
   Serial.println("\n\t ------------------------------");
-  digitalToggleFast( LED_BUILTIN );
 }
