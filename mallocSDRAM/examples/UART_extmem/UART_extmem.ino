@@ -57,14 +57,14 @@ DMA_RAM char xbuff2[XFERSIZE];
 // Opps @221 MHz : 1 Here ONE 58368 xb B[2032 2050] xb ERR[198 360]
 // 2 Here TWO L/s=269 B/s=1096982
 char Where[]="IN SDRAM";
-char *buf1t = (char *)(0x80004000); // [BUFFSIZE];
-char *buf1r = (char *)(0x80008000); // [BUFFSIZE];
-char *buf2t = (char *)(0x8000C000); // [BUFFSIZE];
-char *buf2r = (char *)(0x80010000); // [BUFFSIZE];
-char *xfer = (char *)(0x80020000); // [XFERSIZE + 10];
-char *xferCMP = (char *)(0x80024000); // [XFERSIZE + 10];
-char *xbuff1 = (char *)(0x80028000); // [XFERSIZE];
-char *xbuff2 = (char *)(0x8002c000); // [XFERSIZE];
+char *buf1t = (char *)(0x90004000); // [BUFFSIZE];
+char *buf1r = (char *)(0x90008000); // [BUFFSIZE];
+char *buf2t = (char *)(0x9000C000); // [BUFFSIZE];
+char *buf2r = (char *)(0x90010000); // [BUFFSIZE];
+char *xfer = (char *)(0x90020000); // [XFERSIZE + 10];
+char *xferCMP = (char *)(0x90024000); // [XFERSIZE + 10];
+char *xbuff1 = (char *)(0x90028000); // [XFERSIZE];
+char *xbuff2 = (char *)(0x9002c000); // [XFERSIZE];
 #endif
 
 void setup() {
@@ -75,8 +75,8 @@ void setup() {
     Serial.print( "\n\tSUCCESS sdram.init()\n");
   }
   Serial.printf("Compile Time:: " __FILE__ " " __DATE__ " " __TIME__ "\n");
-  Serial1.begin(6000000);
-  Serial2.begin(6000000);
+  Serial1.begin(5000000);
+  Serial2.begin(5000000);
   int ii;
   for ( ii = 0; ii < XFERSIZE; ii++ ) xfer[ii] = (ii % 91) + 33;
   for ( ; ii < XFERSIZE; ii++ ) xfer[ii] = (ii % 91) + 32;

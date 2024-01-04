@@ -42,7 +42,7 @@ char *xferCMP; //  = (char *)(0x80010000); // [XFERSIZE + 10];
 void setup() {
   while (!Serial) ; // wait
   pinMode(LED_BUILTIN, OUTPUT);
-  if ( CrashReport ) Serial.print( CrashReport );
+  // if ( CrashReport ) Serial.print( CrashReport );
   for ( uint32_t ii = 0; ii < USED_UARTS; ii++ ) {
     SerBArr[ii][iTX] = (char *)sdram_malloc(24 * 1024);
     SerBArr[ii][iRX] = (char *)sdram_malloc(24 * 1024);
