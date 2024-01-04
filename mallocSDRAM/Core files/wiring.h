@@ -37,7 +37,6 @@
 #include "binary.h"
 #include "core_id.h"
 #include "core_pins.h"
-//#include "hasSDRAMKludge.h"
 
 // type_traits interferes with min() and other defines
 // include it early, so we can define these later
@@ -154,27 +153,25 @@ constexpr auto max(A&& a, B&& b) -> decltype(a < b ? std::forward<A>(a) : std::f
 #define DISPLAY 1
 
 // undefine stdlib's abs if encountered
-/*#ifdef abs
-  #undef abs
+#ifdef abs
+#undef abs
 #endif
-*/
 
 #if __cplusplus >= 201103L && defined(__STRICT_ANSI__)
 #define typeof(a) decltype(a)
 #endif
 
-/*#define abs(x) ({ \
+#define abs(x) ({ \
   typeof(x) _x = (x); \
   (_x > 0) ? _x : -_x; \
 })
-*/
 #define constrain(amt, low, high) ({ \
   typeof(amt) _amt = (amt); \
   typeof(low) _low = (low); \
   typeof(high) _high = (high); \
   (_amt < _low) ? _low : ((_amt > _high) ? _high : _amt); \
 })
-//#define round(x) ((long) __builtin_round(x))
+#define round(x) ((long) __builtin_round(x))
 
 #define radians(deg) ((deg)*DEG_TO_RAD)
 #define degrees(rad) ((rad)*RAD_TO_DEG)
@@ -230,13 +227,10 @@ void extmem_free(void *ptr);
 void *extmem_calloc(size_t nmemb, size_t size);
 void *extmem_realloc(void *ptr, size_t size);
 
-//kludge for SDRAM
-//#ifdef extSDRAM
 void *sdram_malloc(size_t size);
 void sdram_free(void *ptr);
 void *sdram_calloc(size_t nmemb, size_t size);
 void *sdram_realloc(void *ptr, size_t size);
-//#endif
 
 #ifdef __cplusplus
 } // extern "C"

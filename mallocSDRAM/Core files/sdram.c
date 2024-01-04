@@ -325,24 +325,24 @@ bool sdram_init(void)
     //  precharge all
     //  auto refresh (NXP SDK sends this twice, why?)
     //  mode set
-    bool result_cmd = SendIPCommand(0x80000000, 0x0f, 0, NULL);  //Prechargeall
+    bool result_cmd = SendIPCommand(0x90000000, 0x0f, 0, NULL);  //Prechargeall
     if (result_cmd != true)
     {
         return result_cmd;
     }
-    result_cmd = SendIPCommand(0x80000000, 0x0c, 0, NULL);        //AutoRefresh
+    result_cmd = SendIPCommand(0x90000000, 0x0c, 0, NULL);        //AutoRefresh
     if (result_cmd != true)
     {
         return result_cmd;
     }
-    result_cmd = SendIPCommand(0x80000000, 0x0c, 0, NULL);         //AutoRefresh
+    result_cmd = SendIPCommand(0x90000000, 0x0c, 0, NULL);         //AutoRefresh
     if (result_cmd != true)
     {
         return result_cmd;
     }
     /* Mode setting value. */
     uint16_t mode = (uint16_t)3| (uint16_t)(3 << 4);
-    result_cmd = SendIPCommand(0x80000000, 0x0a, mode, NULL);       //Modeset
+    result_cmd = SendIPCommand(0x90000000, 0x0a, mode, NULL);       //Modeset
     if (result_cmd != true)
     {
         return result_cmd;

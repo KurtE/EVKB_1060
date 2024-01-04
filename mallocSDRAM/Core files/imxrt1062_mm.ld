@@ -4,7 +4,6 @@ MEMORY
 	DTCM (rwx):  ORIGIN = 0x20000000, LENGTH = 512K
 	RAM (rwx):   ORIGIN = 0x20200000, LENGTH = 512K
 	FLASH (rwx): ORIGIN = 0x60000000, LENGTH = 16128K
-	ERAM (rwx):  ORIGIN = 0x70000000, LENGTH = 16384K
     SDRAM (rwx):  ORIGIN = 0x90000000, LENGTH = 32768K
 }
 
@@ -73,12 +72,6 @@ SECTIONS
 		. = ALIGN(32);
 	} > RAM
     
-    
-	.bss.extram (NOLOAD) : {
-		*(SORT_BY_ALIGNMENT(SORT_BY_NAME(.externalram)))
-		. = ALIGN(32);
-	} > ERAM
-    
 	.bss.extsdram (NOLOAD) : {
 		*(SORT_BY_ALIGNMENT(SORT_BY_NAME(.externalsdram)))
 		. = ALIGN(32);
@@ -104,9 +97,6 @@ SECTIONS
 
 	_heap_start = ADDR(.bss.dma) + SIZEOF(.bss.dma);
 	_heap_end = ORIGIN(RAM) + LENGTH(RAM);
-
-	_extram_start = ADDR(.bss.extram);
-	_extram_end = ADDR(.bss.extram) + SIZEOF(.bss.extram);
     
 	_extsdram_start = ADDR(.bss.extsdram);
 	_extsdram_end = ADDR(.bss.extsdram) + SIZEOF(.bss.extsdram);

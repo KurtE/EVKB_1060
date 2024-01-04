@@ -24,16 +24,14 @@
 #define __PGMSPACE_H_ 1
 
 #include <inttypes.h>
-//#include "hasSDRAMKludge.h"
 
 #define DMAMEM __attribute__ ((section(".dmabuffers"), used))
 #define FASTRUN __attribute__ ((section(".fastrun") ))
 #define PROGMEM __attribute__((section(".progmem")))
 #define FLASHMEM __attribute__((section(".flashmem")))
-
-//klude for sdram
-#define EXTSDMEM __attribute__((section(".externalsdram")))
 #define EXTMEM __attribute__((section(".externalram")))
+#define EXTSDMEM __attribute__((section(".externalsdram")))
+
 
 #define PGM_P  const char *
 #define PSTR(str) ({static const char data[] PROGMEM = (str); &data[0];})
