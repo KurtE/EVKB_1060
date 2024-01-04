@@ -1,15 +1,20 @@
 
 #define DB_SERIAL_CNT 5
-#define USED_UARTS 4
+#define USED_UARTS 5
 // #define USERAM_DTCM 1
+#define SPD 5000000 // FASTER 20Mbaud? : https://forum.pjrc.com/index.php?threads/teensy4-1-max-baud-rate.67150/
 
 #define BUFFSIZE 20480 // #1: 2048  #2: 20480
 #define XFERSIZE 20640 // #1: 2064  #2: 20640
 #define XFEREACH 20001 // #1: 2001  #2: 20001
-#define SPD 6000000 // FASTER 20Mbaud? : https://forum.pjrc.com/index.php?threads/teensy4-1-max-baud-rate.67150/
 
+#ifdef ARDUINO_TEENSY40
+HardwareSerialIMXRT *psAll[DB_SERIAL_CNT] = { &Serial1, &Serial2, &Serial3, &Serial4, &Serial5 };
+char SerNames[DB_SERIAL_CNT][16] = { "Serial1", "Serial2", "Serial3", "Serial4", "Serial5" };
+#else
 HardwareSerialIMXRT *psAll[DB_SERIAL_CNT] = { &Serial1, &Serial2, &Serial4, &Serial6, &Serial5 };
 char SerNames[DB_SERIAL_CNT][16] = { "Serial1", "Serial2", "Serial4", "Serial6", "Serial5" };
+#endif
 /*    Serial1.begin(6000000); // 2 & 0
       Serial2.begin(6000000); // 17 & 18
       Serial6.begin(6000000); // p# 24 Tx & 25 Rx
@@ -37,7 +42,7 @@ char *xferCMP; //  = (char *)(0x80010000); // [XFERSIZE + 10];
 void setup() {
   while (!Serial) ; // wait
   pinMode(LED_BUILTIN, OUTPUT);
-  // if ( CrashReport ) Serial.print( CrashReport );
+  if ( CrashReport ) Serial.print( CrashReport );
   for ( uint32_t ii = 0; ii < USED_UARTS; ii++ ) {
     SerBArr[ii][iTX] = (char *)sdram_malloc(24 * 1024);
     SerBArr[ii][iRX] = (char *)sdram_malloc(24 * 1024);
