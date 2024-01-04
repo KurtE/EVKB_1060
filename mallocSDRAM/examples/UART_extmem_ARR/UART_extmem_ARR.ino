@@ -1,9 +1,3 @@
-//#define SDRAM_T4_HACK 1
-#ifdef SDRAM_T4_HACK
-#include "SDRAM_t4.h"
-SDRAM_t4 sdram;
-#endif
-
 #define DB_SERIAL_CNT 5
 #define USED_UARTS 5 // Set to number UARTS to test from psAll[] below
 // #define USERAM_DTCM 1
@@ -49,9 +43,6 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(13, HIGH);
   while (!Serial) ; // wait
-#ifdef SDRAM_T4_HACK
-  if (sdram.init()) Serial.print( "\n\tSUCCESS sdram.init()\n");
-#endif
   if ( CrashReport ) Serial.print( CrashReport );
   for ( uint32_t ii = 0; ii < USED_UARTS; ii++ ) {
     for ( uint32_t jj = 0; jj < 3; jj++ ) {
@@ -106,6 +97,7 @@ void loop() {
     cntByL = cntBy;
     cntLp = cntBy = 0;
     aTime -= 1000;
+    digitalToggleFast( LED_BUILTIN );
   }
   int allCnt;
   int ab[USED_UARTS];
@@ -128,5 +120,4 @@ void loop() {
     psAll[ii]->write( xfer, XFEREACH );
   }
   Serial.println("\n\t ------------------------------");
-  digitalToggleFast( LED_BUILTIN );
 }
