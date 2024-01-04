@@ -9,7 +9,7 @@
 
 // Teensy Micromod external RAM address range is 0x80000000 to 0x8FFFFFFF
 #define HAS_SDRAM
-#define IS_SDRAM(addr) (((uint32_t)addr >> 28) == 8)
+#define IS_SDRAM(addr) (((uint32_t)addr >> 28) == 9)
 #endif
 
 

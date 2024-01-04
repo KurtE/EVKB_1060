@@ -1,4 +1,4 @@
-#define SDRAM_T4_HACK 1
+//#define SDRAM_T4_HACK 1
 #ifdef SDRAM_T4_HACK
 #include "SDRAM_t4.h"
 SDRAM_t4 sdram;
