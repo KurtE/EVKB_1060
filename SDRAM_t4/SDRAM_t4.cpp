@@ -221,7 +221,7 @@ bool SDRAM_t4::init()
     // 5 = 133mhz
     // 4 = 166mhz - SDRAM rated,  see post #60
     // 3 = 221mhz
-    const unsigned int clockdiv = 5;
+    const unsigned int clockdiv = 4;
 
     CCM_CBCDR = (CCM_CBCDR & ~(CCM_CBCDR_SEMC_PODF(7))) |
         CCM_CBCDR_SEMC_CLK_SEL | CCM_CBCDR_SEMC_ALT_CLK_SEL |
@@ -260,11 +260,11 @@ bool SDRAM_t4::init()
 
     configure_sdram_pins();
 
-    if(NOCAP == 1) {
-        SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F) | SEMC_MCR_DQSMD;
-    } else  { // enable SEMC_MCR_DQSMD (EMC_39
+    //if(NOCAP == 1) {
+    //    SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F) | SEMC_MCR_DQSMD;
+    //} else  { // enable SEMC_MCR_DQSMD (EMC_39
         SEMC_MCR |= SEMC_MCR_MDIS | SEMC_MCR_CTO(0xFF) | SEMC_MCR_BTO(0x1F);
-    }
+    //}
 
     // TODO: reference manual page 1364 says "Recommend to set BMCR0 with 0x0 for
     // applications that require restrict sequence of transactions", same on BMCR1
@@ -321,24 +321,24 @@ bool SDRAM_t4::init()
     //  precharge all
     //  auto refresh (NXP SDK sends this twice, why?)
     //  mode set
-    bool result_cmd = SendIPCommand(0x80000000, 0x0f, 0, NULL);  //Prechargeall
+    bool result_cmd = SendIPCommand(0x90000000, 0x0f, 0, NULL);  //Prechargeall
     if (result_cmd != true)
     {
         return result_cmd;
     }
-    result_cmd = SendIPCommand(0x80000000, 0x0c, 0, NULL);        //AutoRefresh
+    result_cmd = SendIPCommand(0x90000000, 0x0c, 0, NULL);        //AutoRefresh
     if (result_cmd != true)
     {
         return result_cmd;
     }
-    result_cmd = SendIPCommand(0x80000000, 0x0c, 0, NULL);         //AutoRefresh
+    result_cmd = SendIPCommand(0x90000000, 0x0c, 0, NULL);         //AutoRefresh
     if (result_cmd != true)
     {
         return result_cmd;
     }
     /* Mode setting value. */
     uint16_t mode = (uint16_t)3| (uint16_t)(3 << 4);
-    result_cmd = SendIPCommand(0x80000000, 0x0a, mode, NULL);       //Modeset
+    result_cmd = SendIPCommand(0x90000000, 0x0a, mode, NULL);       //Modeset
     if (result_cmd != true)
     {
         return result_cmd;
