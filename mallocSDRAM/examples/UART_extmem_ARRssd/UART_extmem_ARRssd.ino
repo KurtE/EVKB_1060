@@ -1,6 +1,3 @@
-#include "SDRAMdb_t4.h"
-#include "smalloc.h"
-
 SDRAM_t4 sdram;
 #define SHOWSSD 1
 #if SHOWSSD

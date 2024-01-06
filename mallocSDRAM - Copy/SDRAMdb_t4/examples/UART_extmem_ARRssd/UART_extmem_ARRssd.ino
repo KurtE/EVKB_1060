@@ -1,3 +1,4 @@
+#include "SDRAMdb_t4.h"
 #define SHOWSSD 1
 #if SHOWSSD
 #include "SSD1306help.h"
@@ -30,7 +31,7 @@ enum idxBA { iTX = 0, iRX, iXF }; // index Buffer Array Tx, Rx, XFer
 #if USERAM_DTCM // DTCM or DMAMEM buffers
 char Where[] = "malloc DMAMEM";
 #else // sdram_malloc address SDRAM
-char Where[] = "sdram_malloc";
+char Where[] = "sdram_malloc db";
 #endif
 char *xfer; // Outgoing Packet Buffer
 char *xferCMP; // Duplicate data to compare incoming data
