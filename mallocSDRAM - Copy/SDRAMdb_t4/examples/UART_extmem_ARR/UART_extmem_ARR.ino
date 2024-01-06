@@ -1,4 +1,4 @@
-#include "SDRAMdb_t4.h"
+#include "SDRAM_t4.h"
 SDRAM_t4 sdram;
 
 #define DB_SERIAL_CNT 5
