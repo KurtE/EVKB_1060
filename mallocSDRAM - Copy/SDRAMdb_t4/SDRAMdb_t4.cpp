@@ -347,7 +347,7 @@ bool SDRAM_t4::init()
     SEMC_SDRAMCR3 |= SEMC_SDRAMCR3_REN;
 
     if(result_cmd == false) return false;
-
+delayMicroseconds( 500 );
             SDRAMexternal_sdram_size = 32;
         // TODO: zero uninitialized EXTMEM variables
         // TODO: copy from flash to initialize EXTMEM variables
@@ -355,7 +355,28 @@ bool SDRAM_t4::init()
             SDRAMexternal_sdram_size * 0x100000 -
             ((uint32_t)&_extsdram_end - (uint32_t)&_extsdram_start),
             1, NULL);
-
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+delayMicroseconds( 500 );
 
     return true; // hopefully SDRAM now working at 90000000 to 91FFFFFF
 }
