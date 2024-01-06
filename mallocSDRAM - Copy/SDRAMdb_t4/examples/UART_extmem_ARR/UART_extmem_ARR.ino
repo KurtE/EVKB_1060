@@ -46,7 +46,7 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(13, HIGH);
   while (!Serial) ; // wait
-  //if ( CrashReport ) Serial.print( CrashReport );
+  if ( CrashReport ) Serial.print( CrashReport );
   if (sdram.init()) {
     Serial.print( "\n\tSUCCESS sdram.init()\n");
   }

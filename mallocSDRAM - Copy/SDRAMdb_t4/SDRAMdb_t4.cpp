@@ -1,4 +1,7 @@
 #include "SDRAMdb_t4.h"
+#include "smalloc.h"
+
+extern "C" struct smalloc_pool extsdram_smalloc_pool;
 
 unsigned int SDRAM_t4::ns_to_clocks(float ns, float freq)
 {
@@ -351,10 +354,36 @@ delayMicroseconds( 500 );
             SDRAMexternal_sdram_size = 32;
         // TODO: zero uninitialized EXTMEM variables
         // TODO: copy from flash to initialize EXTMEM variables
-        sm_set_pool(&extsdram_smalloc_pool, &_extsdram_end,
-            SDRAMexternal_sdram_size * 0x100000 -
-            ((uint32_t)&_extsdram_end - (uint32_t)&_extsdram_start),
-            1, NULL);
+
+
+// int sm_set_pool(struct smalloc_pool *spool, void *new_pool, size_t new_pool_size, int do_zero, smalloc_oom_handler oom_handler)
+        // sm_set_pool(&extsdram_smalloc_pool, &_extsdram_end,             SDRAMexternal_sdram_size * 0x100000 -             ((uint32_t)&_extsdram_end - (uint32_t)&_extsdram_start),             1, NULL);
+        sm_set_pool(&extsdram_smalloc_pool, (void *)0x90000000, 0x02000000, 1, NULL);
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+// int sm_set_default_pool(void *new_pool, size_t new_pool_size, int do_zero, smalloc_oom_handler oom_handler)
+// {
+// return sm_set_pool(&smalloc_curr_pool, new_pool, new_pool_size, do_zero, oom_handler);
+//        sm_set_default_pool(&extsdram_smalloc_pool, SDRAMexternal_sdram_size * 0x100000, 1, NULL);
+    asm volatile("nop");
+    asm volatile("nop");
     asm volatile("nop");
     asm volatile("nop");
     asm volatile("nop");

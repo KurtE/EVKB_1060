@@ -10,6 +10,8 @@
 #include "Arduino.h"
 
 
+//kludge for sdram
+#if defined(ARDUINO_TEENSY_MICROMOD)
 extern "C" {
 extern unsigned long _extsdram_start;
 extern unsigned long _extsdram_end;
@@ -21,7 +23,6 @@ void *sdram_realloc(void *ptr, size_t size);
 extern struct smalloc_pool extsdram_smalloc_pool;
 extern uint8_t SDRAMexternal_sdram_size;
 }
-#if defined(ARDUINO_TEENSY_MICROMOD)
 #endif
 
 class SDRAM_t4 {
