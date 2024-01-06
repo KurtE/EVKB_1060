@@ -1,4 +1,6 @@
 #include "SDRAMdb_t4.h"
+SDRAM_t4 sdram;
+
 #define SHOWSSD 1
 #if SHOWSSD
 #include "SSD1306help.h"
@@ -50,12 +52,21 @@ void setup() {
   digitalWrite(13, HIGH);
   while (!Serial) ; // wait
   if ( CrashReport ) Serial.print( CrashReport );
+  if (sdram.init()) {
+    Serial.print( "\n\tSUCCESS sdram.init()\n");
+  }
+  else {
+    Serial.print( "\n\tFAILED sdram.init()\n");
+  }
+
   for ( uint32_t ii = 0; ii < USED_UARTS; ii++ ) {
     for ( uint32_t jj = 0; jj < 3; jj++ ) {
       SerBArr[ii][jj] = (char *)sdram_malloc(24 * 1024);
+      Serial.printf( "\n SerBArr[%u][%u] at %p",ii, jj , SerBArr[ii][jj] );
       if ( 0 == SerBArr[ii][jj] ) flSDRAM++;
     }
   }
+  Serial.println();
   xfer = (char *)sdram_malloc(24 * 1024);
   if ( 0 == xfer ) flSDRAM++;
   xferCMP = (char *)sdram_malloc(24 * 1024);
