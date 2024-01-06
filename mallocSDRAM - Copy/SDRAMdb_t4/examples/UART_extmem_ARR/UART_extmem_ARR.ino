@@ -1,24 +1,15 @@
-#include "SDRAMdb_t4.h"
-#include "smalloc.h"
-
-SDRAM_t4 sdram;
-#define SHOWSSD 1
-#if SHOWSSD
-#include "SSD1306help.h"
-#endif
-
 #define DB_SERIAL_CNT 5
 #define USED_UARTS 5 // Set to number UARTS to test from psAll[] below
 // #define USERAM_DTCM 1
-#define SPD 3000000 // FASTER 20Mbaud? : https://forum.pjrc.com/index.php?threads/teensy4-1-max-baud-rate.67150/
+#define SPD 2000000 // FASTER 20Mbaud? : https://forum.pjrc.com/index.php?threads/teensy4-1-max-baud-rate.67150/
 
 #define BUFFSIZE 20480 // #1: 2048  #2: 20480
 #define XFERSIZE 20640 // #1: 2064  #2: 20640
 #define XFEREACH 20001 // #1: 2001  #2: 20001
 
 #ifdef ARDUINO_TEENSY40
-HardwareSerialIMXRT *psAll[DB_SERIAL_CNT] = { &Serial1, &Serial2, &Serial3, &Serial4, &Serial5 };
-char SerNames[DB_SERIAL_CNT][16] = { "Serial1", "Serial2", "Serial3", "Serial4", "Serial5" };
+HardwareSerialIMXRT *psAll[DB_SERIAL_CNT] = { &Serial5, &Serial2, &Serial3, &Serial4, &Serial1 };
+char SerNames[DB_SERIAL_CNT][16] = { "Serial5", "Serial2", "Serial3", "Serial4", "Serial1" };
 #else
 HardwareSerialIMXRT *psAll[DB_SERIAL_CNT] = { &Serial1, &Serial2, &Serial4, &Serial6, &Serial5 };
 char SerNames[DB_SERIAL_CNT][16] = { "Serial1", "Serial2", "Serial4", "Serial6", "Serial5" };
@@ -53,9 +44,6 @@ void setup() {
   digitalWrite(13, HIGH);
   while (!Serial) ; // wait
   if ( CrashReport ) Serial.print( CrashReport );
-  if (sdram.init()) {
-    Serial.print( "\n\tSUCCESS sdram.init()\n");
-  }
   for ( uint32_t ii = 0; ii < USED_UARTS; ii++ ) {
     for ( uint32_t jj = 0; jj < 3; jj++ ) {
       SerBArr[ii][jj] = (char *)sdram_malloc(24 * 1024);
@@ -90,9 +78,6 @@ void setup() {
     psAll[ii]->write( xfer, XFEREACH );
   }
   delay(100); // Allow first UART transfers to proceed
-#if SHOWSSD
-  ssdSetup();
-#endif
   aTime = 0;
 }
 
@@ -100,25 +85,20 @@ void loop() {
   int ii, jj;
   for ( jj = 0; 0 != cntLp && jj < USED_UARTS; jj++ ) { // Skip first 0 != cntLp, needed var xb[] on ReadBytes follows
     for ( ii = 0; SerBArr[jj][iXF][ii] != '!' && ii < xb[jj]; ii++ ); // GET ii: Skip 'stats' before packet starting "!"
-    if ( 0 == ii || 90 < ii || 0 != memcmp( &SerBArr[jj][iXF][ii], xferCMP, XFEREACH) ) {
+    if ( 0 == ii || 0 != memcmp( &SerBArr[jj][iXF][ii], xferCMP, XFEREACH) ) {
       xbERR[jj]++;
-      Serial.printf( "\txbuff idx=%u no cmp! : %s Err#:%u #Rx:%u #Av:%u #ii:\n", jj, SerNames[jj], xbERR[jj], xb[jj], psAll[jj]->available(), ii);
-#ifdef USB_DUAL_SERIAL
-      SerialUSB1.printf( "\txbuff idx=%u no cmp! : %s Err#:%u #Rx:%u #Av:%u #ii:%u\n", jj, SerNames[jj], xbERR[jj], xb[jj], psAll[jj]->available(), ii);
-#endif
-      delay(1000);
+      Serial.printf( "\txbuff idx=%u no cmp! : %s Err#:%u #Rx:%u #Av:%u\n", jj, SerNames[jj], xbERR[jj], xb[jj], psAll[jj]->available());
     }
   }
+  for ( ii = 0; ii < USED_UARTS; ii++ ) xb[ii] = 0;
   cntLp++;
   if ( aTime >= 1000 ) {
-    textdraw();
     cntLpL = cntLp;
     cntByL = cntBy;
     cntLp = cntBy = 0;
     aTime -= 1000;
     digitalToggleFast( LED_BUILTIN );
   }
-  for ( ii = 0; ii < USED_UARTS; ii++ ) xb[ii] = 0;
   int allCnt;
   int ab[USED_UARTS];
   for ( ii = 0; ii < USED_UARTS; ii++ ) ab[ii] = 0;
@@ -128,38 +108,16 @@ void loop() {
       allCnt += ab[ii] = psAll[ii]->available();
     for ( ii = 0; ii < USED_UARTS; ii++ )
       if ( ab[ii] != 0 ) xb[ii] += psAll[ii]->readBytes( &SerBArr[ii][iXF][xb[ii]], ab[ii] );
-    delayMicroseconds(50);
+    delayMicroseconds(15);
   } while ( 0 != allCnt);
   for ( ii = 0; ii < USED_UARTS; ii++ ) {
     SerBArr[ii][iXF][xb[ii]] = 0;
-#ifdef USB_DUAL_SERIAL
-    if ( xb[ii] < (XFEREACH) || xb[ii] > (XFEREACH + 90 ) ) {
-      SerialUSB1.printf( "\n%.25s\n", SerBArr[ii][iXF] );
-      if (xb[ii] > 50)
-        SerialUSB1.printf( "...\n%s\n\tms=%u xb[ii]=%u\n", &SerBArr[ii][iXF][xb[ii] - 20], millis(), xb[ii] );
-      else
-        SerialUSB1.printf( "...\n%s\n\tms=%u xb[ii]=%u\n", &SerBArr[ii][iXF][xb[ii]], millis(), xb[ii] );
-    }
-#endif
     cntBy += xb[ii];
     Serial.printf( "\n%.150s", SerBArr[ii][iXF] );
   }
   for ( ii = 0; ii < USED_UARTS; ii++ ) {
-    psAll[ii]->printf( "\n%s Here %u\t #B:%u #ERR:%u Lp/s=%u B/s=%u MEM=%s\n", SerNames[ii], millis(), xb[ii], xbERR[ii], cntLpL, cntByL, Where );
+    psAll[ii]->printf( "\n%s Here %u\t #B:%u #ERR:%u /s=%u B/s=%u MEM=%s\n", SerNames[ii], millis(), xb[ii], xbERR[ii], cntLpL, cntByL, Where );
     psAll[ii]->write( xfer, XFEREACH );
   }
-  Serial.println("\n\t --------------------\n");
-}
-void textdraw(void) {
-#if SHOWSSD
-  display.clearDisplay();
-  display.setTextSize(1);             // Normal 1:1 pixel scale
-  display.setTextColor(SSD1306_WHITE);        // Draw white text
-  display.setCursor(0, 0);            // Start at top-left corner
-  for ( int ii = 0; ii < USED_UARTS; ii++ ) {
-    display.printf( "%u #B%u #ERR:%u\n", ii, xb[ii], xbERR[ii] );
-  }
-  display.printf( "    %s\nms=%u Lp/s:%u\nB/s:%u", Where, millis(), cntLpL, cntByL );
-  display.display();
-#endif
+  Serial.println("\n\t ------------------------------");
 }
