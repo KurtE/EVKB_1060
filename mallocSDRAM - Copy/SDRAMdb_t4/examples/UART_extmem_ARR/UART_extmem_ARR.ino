@@ -47,7 +47,7 @@ void setup() {
   digitalWrite(13, HIGH);
   while (!Serial) ; // wait
   if ( CrashReport ) Serial.print( CrashReport );
-  if (sdram.init()) {
+  if (sdram.begin()) {
     Serial.print( "\n\tSUCCESS sdram.init()\n");
   }
   else {
