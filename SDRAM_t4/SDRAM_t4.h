@@ -1,26 +1,28 @@
 #ifndef _SDRAM_T4_h
 #define _SDRAM_T4_h
 
-// Configure MPU to allow read/write, disallow exec, use cache
-//put following lines in startup.c
-//    SCB_MPU_RBAR = 0x80000000 | REGION(i++); // SDRAM
-//    SCB_MPU_RASR = MEM_CACHE_WBWA | READWRITE | NOEXEC | SIZE_32M;
 
 #include "Arduino.h"
+#include "smalloc.h"
+
+extern "C" {
+void *sdram_malloc(size_t size);
+void sdram_free(void *ptr);
+void *sdram_calloc(size_t nmemb, size_t size);
+void *sdram_realloc(void *ptr, size_t size);
+}
 
 class SDRAM_t4 {
 public:
-    constexpr SDRAM_t4() {};
-    static bool init();
-    
+    SDRAM_t4() {  };
+    bool begin(uint8_t external_sdram_size = 32, uint16_t clock = 166, uint8_t useDQS = 1);
+    inline float getFrequency() { return frequency; }
 private:
     static unsigned int ns_to_clocks(float ns, float freq);
     static void configure_sdram_pins();
     static bool SendIPCommand(uint32_t address, uint16_t command, uint32_t write, uint32_t *read);
     static bool IPCommandComplete();
-    
-    //set NOCAP to 1 if cap C29 is removed
-    static const uint8_t NOCAP = 0;
-    
+    static bool check_fixed_pattern(uint32_t pattern);
+    float frequency;   
 };
 #endif
