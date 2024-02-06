@@ -10,6 +10,7 @@ uint32_t speed = 0; // If speed not ZERO do a single SPEED test. If ZERO follow 
 uint32_t RetestWrite = 0;
 uint32_t SumRetestWrite = 0;
 uint32_t RetestWriteSpeed = 166; // Set ZERO to not do RetestWrite
+bool RetestWriteNow = false;
 #include "SDRAM_t4.h"
 const uint32_t speedCnt = sizeof(speedRange) / sizeof(speedRange[0]) - SKIP_LAST_SPEEDS; // Count of Fixed patterns used for all writes for each pass
 uint32_t readRepeat = TYPICAL_REREADS;  // Writes to Test memory, will repeat Reads and Test compare 'readRepeat' times
@@ -127,7 +128,7 @@ void doTest() {
     testmsec = millis() - testmsec;
     double totalReads = (double)size / sizeof(uint32_t) * 1048576 * readRepeat * testCnt;
     float errPercent = totErrs / totalReads * 100.0;
-    if  ( SumRetestWrite > 0 || 0 != RetestWriteSpeed ) {
+    if  ( SumRetestWrite > 0 || RetestWriteNow ) {
       Serial.printf("\nTest result: %llu read errors (%.4f%%) : %u RetestWrite errors\n", totErrs, errPercent, SumRetestWrite);
       Serial.printf("Extra info: ran for %.2f seconds at %u MHz\n", testmsec / 1000.0, speed);
       Serial.println("--------------------------\n\n");
@@ -159,9 +160,11 @@ void setup() {
       setSpeed( speed );
       doTest();
       if ( 0 != RetestWriteSpeed ) {
+        RetestWriteNow = true;
         readRepeat = 1; // ReRun to get RetestWrite Errors
         doTest();
         readRepeat = TYPICAL_REREADS;
+        RetestWriteNow = false;
       }
     }
   }
@@ -247,7 +250,6 @@ uint32_t check_lfsr_pattern(uint32_t seed) {
     MemResSum += MemRes;
   }
   testMsec = micros() - testMsec;
-  Serial.printf("%c", cRes);
 
   if ( 1 == readRepeat && 0 != MemResSum) {
     setSpeed( RetestWriteSpeed );
@@ -265,10 +267,12 @@ uint32_t check_lfsr_pattern(uint32_t seed) {
       }
     }
     setSpeed( speed );
+    if ( RetestWrite > 0) cRes = '&';
 #ifdef USB_DUAL_SERIAL
     SerialUSB1.printf("\n\tFail pseuRand seq. not same with seed=%u", seed);
 #endif
   }
+  Serial.printf("%c", cRes);
 #ifdef USB_DUAL_SERIAL
   SerialUSB1.printf("\nTest pseudo-random sequence Compare time secs %.2f with \tError Cnt %u\n", testMsec / 1000000.0, MemResSum);
 #endif
@@ -302,7 +306,6 @@ uint32_t check_fixed_pattern(uint32_t pattern) {
     }
   }
   testMsec = micros() - testMsec;
-  Serial.printf("%c", cRes);
 
   if ( 1 == readRepeat && 0 != MemResSum)
   {
@@ -314,10 +317,13 @@ uint32_t check_fixed_pattern(uint32_t pattern) {
       }
     }
     setSpeed( speed );
+    if ( RetestWrite > 0) cRes = '$';
+
 #ifdef USB_DUAL_SERIAL
     SerialUSB1.printf("\n\tFail fixed pattern not same with seed=%u", pattern);
 #endif
   }
+  Serial.printf("%c", cRes);
 #ifdef USB_DUAL_SERIAL
   SerialUSB1.printf("\nTest fixed pattern Compare time secs %.2f with \tError Cnt %u\n", testMsec / 1000000.0, MemResSum);
 #endif
