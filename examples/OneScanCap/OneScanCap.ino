@@ -1,5 +1,5 @@
-#define FIRST_SPEED 3 // ZERO BASED index: into speedRange to start testing: [0]==133 and [5]==227
-#define SKIP_LAST_SPEEDS 0 // COUNT: Set 0 to run to end of array. When 2 it will skip the last two {270, 288}
+#define FIRST_SPEED 1 // ZERO BASED index: into speedRange to start testing: [0]==133 and [5]==227
+#define SKIP_LAST_SPEEDS 5 // COUNT: Set 0 to run to end of array. When 2 it will skip the last two {270, 288}
 
 // index offset 1st ref:   0    1    2    3    4    5    6    7    8    9
 uint32_t speedRange[] = {133, 166, 196, 206, 216, 227, 240, 254, 270, 288}; // ? frequencies 173,180,187,196,206,216,227,240,254,270,288
