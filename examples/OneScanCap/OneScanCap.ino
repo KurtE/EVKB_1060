@@ -1,17 +1,21 @@
-#define FIRST_SPEED 0 // ZERO BASED index: into speedRange to start testing: [0]==133 and [5]==227
-#define SKIP_LAST_SPEEDS 1 // COUNT: Set 0 to run to end of array. When 2 it will skip the last two {270, 288}
+#define FIRST_SPEED 1 // ZERO BASED index: into speedRange to start testing: [0]==133 and [5]==227
+#define SKIP_LAST_SPEEDS 3 // COUNT: Set 0 to run to end of array. When 2 it will skip the last two {270, 288}
 
-// index offset 1st ref:   0    1    2    3    4    5    6    7    8    9
-uint32_t speedRange[] = {133, 166, 196, 206, 216, 227, 240, 254, 270, 288}; // ? frequencies 173,180,187,196,206,216,227,240,254,270,288
+#define SR_ARR_SIZE 10
+            // index offset 1st ref:   0    1    2    3    4    5    6    7    8    9
+uint32_t speedRange1[ SR_ARR_SIZE ] = {133, 166, 196, 206, 216, 227, 240, 254, 270, 288}; // ? frequencies 173,180,187,196,206,216,227,240,254,270,288
+uint32_t speedRange2[ SR_ARR_SIZE ] = {240, 196, 240, 166, 240, 216, 240, 206, 240, 240 }; // ReRun the same provided value
+uint32_t *speedRange = speedRange1; // #1 is expected standard speed range, #2 can be selected and modified to repeat on indicated values
 
 #define TYPICAL_REREADS 5 // 25 : When Read Errors occur they may be from failed initial Write
+bool showTableCSV = true;
 uint32_t speed = 0; // If speed not ZERO do a single SPEED test. If ZERO follow loop with control index #defines above
 
 // For standard 32MB SDRAM test don't change items ABOVE to run SDRAM from 133 - 270 MHz with write and 5 ReReads.
 
 uint64_t arrResults[10][4]; // SPEED, Time, # Errors, # Read Tests
 #include "SDRAM_t4.h"
-const uint32_t speedCnt = sizeof(speedRange) / sizeof(speedRange[0]) - SKIP_LAST_SPEEDS; // Count of Fixed patterns used for all writes for each pass
+const uint32_t speedCnt = SR_ARR_SIZE - SKIP_LAST_SPEEDS; // Count of Fixed patterns used for all writes for each pass
 uint32_t readRepeat = TYPICAL_REREADS;  // Writes to Test memory, will repeat Reads and Test compare 'readRepeat' times
 /********************************************************************
    This test is meant to evaluate how well different capacitors connected to the
@@ -177,7 +181,18 @@ void setup() {
     Serial.println();
     ii++;
   }
-  Serial.printf("\n\tSDRAM One Scan CAP test Complete {v1.3} :Note tested CAP here pF=\n");
+  Serial.printf("\n\tSDRAM One Scan CAP test Complete {v1.4} :Note tested CAP here pF=\n");
+  if ( showTableCSV ) {
+    ii = 0;
+    Serial.printf("\nTest Table: %u tests with %u ReReads at F_CPU_ACTUAL %u Mhz:\n", lfsrCnt + fixPCnt, readRepeat, F_CPU_ACTUAL / 1000000);
+    Serial.printf("MHz,Seconds,Read Err,%% Err\n");
+    while ( arrResults[ii][0] > 100 ) {
+      Serial.printf("%llu,%llu,%llu,", arrResults[ii][0], arrResults[ii][1], arrResults[ii][2]);
+      Serial.printf("%.4f\n", (float)arrResults[ii][2] / (float)arrResults[ii][3] * 100.0 );
+      ii++;
+    }
+    Serial.printf("SDRAM One Scan CAP v1.4,CAP val tested,pF=,\n");
+  }
   return;
 }
 
